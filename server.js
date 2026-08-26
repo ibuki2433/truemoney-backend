@@ -26,14 +26,24 @@ const RECEIVER_PHONE = (process.env.TRUEMONEY_PHONE || '0863714416').replace(/[^
 const SUPABASE_URL = process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+const GOAL_TARGET = 10000;
 
 let supabase = null;
 if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && !SUPABASE_URL.includes('your-project')) {
   supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
   console.log('✅ Supabase connected successfully.');
 } else {
-  console.log('ℹ️ Supabase not configured in .env (running in standalone mode).');
+  console.log('ℹ️ Supabase not configured — using in-memory storage for real-time tracking.');
 }
+
+// ==========================================
+// IN-MEMORY STORAGE (Fallback เมื่อยังไม่ได้ต่อ Supabase)
+// จะเก็บข้อมูลจริงจากการโดเนทจริงเท่านั้น
+// ==========================================
+const memoryStore = {
+  donations: [],      // Array of { donor_name, message, amount, voucher_code, status, created_at }
+  usedVouchers: new Set()  // ป้องกันซองซ้ำ
+};
 
 // Helper: Mask phone for privacy logs
 function maskPhone(phone) {
@@ -52,7 +62,7 @@ async function sendDiscordNotification({ donorName, message, amount, voucherCode
       avatar_url: 'https://yt3.googleusercontent.com/OBkYl58Z5epxx3jW09CTYbX2Xlv4I68fewCAHYM0oOb7eeUDegMFyDwPQuiPRbUYmlf-BVAZBhg=s900-c-k-c0x00ffffff-no-rj',
       embeds: [
         {
-          title: '🍵 มีการโดเนทค่าชาเขียวใหม่เข้ามา! (TrueMoney Wallet)',
+          title: '🍵 มีการโดเนทค่าบำรุงช่องใหม่เข้ามา! (TrueMoney Wallet)',
           description: `ขอบคุณ **คุณ ${donorName}** ที่ร่วมสนับสนุน Ibuki Ch. 💜💖`,
           color: 0x10B981,
           fields: [
@@ -111,7 +121,7 @@ app.post('/api/donate', async (req, res) => {
     });
   }
 
-  // 2. ตรวจสอบซองซ้ำใน Supabase
+  // 2. ตรวจสอบซองซ้ำ
   if (supabase) {
     try {
       const { data: existing } = await supabase
@@ -128,6 +138,14 @@ app.post('/api/donate', async (req, res) => {
       }
     } catch (dbCheckErr) {
       console.warn('DB check error:', dbCheckErr.message);
+    }
+  } else {
+    // ตรวจสอบซ้ำจาก in-memory
+    if (memoryStore.usedVouchers.has(voucherCode)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ซองของขวัญนี้ถูกใช้งานหรือบันทึกในระบบไปแล้ว'
+      });
     }
   }
 
@@ -188,7 +206,7 @@ app.post('/api/donate', async (req, res) => {
 
       if (isNaN(amount) || amount <= 0) amount = 10.00;
 
-      // 4. บันทึกลง Database (Supabase)
+      // 4. บันทึกลง Database
       const cleanDonorName = (donorName || 'ผู้ไม่ประสงค์ออกนาม').trim().slice(0, 100);
       const cleanMessage = (message || '').trim().slice(0, 500);
 
@@ -207,6 +225,20 @@ app.post('/api/donate', async (req, res) => {
         } catch (dbInsertErr) {
           console.error('❌ Supabase Insert Error:', dbInsertErr.message);
         }
+      } else {
+        // บันทึกลง in-memory storage
+        memoryStore.donations.unshift({
+          donor_name: cleanDonorName,
+          message: cleanMessage,
+          amount: amount,
+          voucher_code: voucherCode,
+          status: 'SUCCESS',
+          created_at: new Date().toISOString()
+        });
+        memoryStore.usedVouchers.add(voucherCode);
+        // เก็บสูงสุด 100 รายการ
+        if (memoryStore.donations.length > 100) memoryStore.donations.pop();
+        console.log(`💾 บันทึกยอด ${amount} บาท จาก ${cleanDonorName} ลง in-memory สำเร็จ`);
       }
 
       // 5. ส่งการแจ้งเตือนเข้า Discord Webhook
@@ -252,13 +284,19 @@ app.post('/api/donate', async (req, res) => {
 
 /**
  * GET /api/stats
+ * สถิติยอดโดเนทแบบ Real-time (ดึงจาก Supabase หรือ in-memory)
  */
 app.get('/api/stats', async (req, res) => {
-  const goalTarget = 5000;
   if (!supabase) {
+    // คำนวณจาก in-memory (ข้อมูลจริงเท่านั้น)
+    const successDonations = memoryStore.donations.filter(d => d.status === 'SUCCESS');
+    const sum = successDonations.reduce((acc, d) => acc + (parseFloat(d.amount) || 0), 0);
+    const count = successDonations.length;
+    const pct = GOAL_TARGET > 0 ? Math.min(Math.round((sum / GOAL_TARGET) * 1000) / 10, 100) : 0;
+
     return res.json({
       success: true,
-      data: { total_amount: 3450, total_count: 69, target_amount: goalTarget, percentage: 69.0 }
+      data: { total_amount: sum, total_count: count, target_amount: GOAL_TARGET, percentage: pct }
     });
   }
 
@@ -280,30 +318,35 @@ app.get('/api/stats', async (req, res) => {
 
     const sum = (list || []).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
     const count = (list || []).length;
-    const pct = Math.min(Math.round((sum / goalTarget) * 1000) / 10, 100);
+    const pct = Math.min(Math.round((sum / GOAL_TARGET) * 1000) / 10, 100);
 
     return res.json({
       success: true,
-      data: { total_amount: sum, total_count: count, target_amount: goalTarget, percentage: pct }
+      data: { total_amount: sum, total_count: count, target_amount: GOAL_TARGET, percentage: pct }
     });
   } catch (err) {
-    res.json({ success: true, data: { total_amount: 0, total_count: 0, target_amount: goalTarget, percentage: 0 } });
+    res.json({ success: true, data: { total_amount: 0, total_count: 0, target_amount: GOAL_TARGET, percentage: 0 } });
   }
 });
 
 /**
  * GET /api/recent-donations
+ * รายการผู้สนับสนุนล่าสุด Real-time (ดึงจาก Supabase หรือ in-memory)
  */
 app.get('/api/recent-donations', async (req, res) => {
   if (!supabase) {
-    return res.json({
-      success: true,
-      data: [
-        { donor_name: '🦊 น้องมิว', message: 'สู้ๆ นะครับต้าวไอบุกิ ขอให้คลิปปังๆ ทุกคลิปเลยน้า! 💖', amount: 50 },
-        { donor_name: '👑 K.Bank_Gamer', message: 'ค่าชาเขียวแก้วโตๆ สตรีมสนุกมากครับแก๊งขี้โม้ 🎮', amount: 100 },
-        { donor_name: '🍵 Fanclub_Ibuki', message: 'เลี้ยงชาเขียวเย็น เป็นกำลังใจให้ครับ!', amount: 30 }
-      ]
-    });
+    // ส่งข้อมูลจริงจาก in-memory (ไม่มี mock data)
+    const recentReal = memoryStore.donations
+      .filter(d => d.status === 'SUCCESS')
+      .slice(0, 10)
+      .map(d => ({
+        donor_name: d.donor_name,
+        message: d.message,
+        amount: d.amount,
+        created_at: d.created_at
+      }));
+
+    return res.json({ success: true, data: recentReal });
   }
 
   try {
@@ -321,6 +364,18 @@ app.get('/api/recent-donations', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/health
+ */
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    mode: supabase ? 'supabase' : 'in-memory',
+    goal_target: GOAL_TARGET,
+    receiver_phone: maskPhone(RECEIVER_PHONE)
+  });
+});
+
 // ==========================================
 // 3. START SERVER
 // ==========================================
@@ -330,8 +385,9 @@ app.listen(PORT, () => {
   🚀 Ibuki TrueMoney Donation API is running!
   📡 Port: ${PORT}
   📱 Receiver Phone: ${maskPhone(RECEIVER_PHONE)}
-  🗄️ Supabase: ${Boolean(supabase) ? 'Connected' : 'Offline / Standalone'}
+  🗄️ Supabase: ${Boolean(supabase) ? 'Connected' : 'Offline → In-Memory Storage'}
   📢 Discord Webhook: ${Boolean(DISCORD_WEBHOOK_URL && !DISCORD_WEBHOOK_URL.includes('your-webhook-id')) ? 'Active' : 'Not Set'}
+  🎯 Goal Target: ${GOAL_TARGET.toLocaleString()} บาท
   ======================================================
   `);
 });
