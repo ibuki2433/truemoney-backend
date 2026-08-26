@@ -1,0 +1,29 @@
+{
+  "name": "ibuki-truemoney-donation-backend",
+  "version": "1.0.0",
+  "description": "TrueMoney Gift Voucher Donation & Media Kit Backend for Ibuki Ch.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "truemoney",
+    "donation",
+    "ibuki",
+    "supabase",
+    "discord-webhook"
+  ],
+  "author": "Ibuki Ch.",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

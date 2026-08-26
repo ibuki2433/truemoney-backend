@@ -1,0 +1,337 @@
+/**
+ * =========================================================================
+ * Ibuki Ch. (最京いぶき) — TrueMoney Gift Voucher Donation Backend API
+ * Node.js (Express) + Supabase + Discord Webhook
+ * Receiver Phone: 086-371-4416 (Configurable via .env TRUEMONEY_PHONE)
+ * =========================================================================
+ */
+
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const { createClient } = require('@supabase/supabase-js');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors({ origin: '*' }));
+app.use(express.json());
+app.use(express.static(__dirname));
+
+// ==========================================
+// 1. CONFIGURATION
+// ==========================================
+const RECEIVER_PHONE = (process.env.TRUEMONEY_PHONE || '0863714416').replace(/[^0-9]/g, '');
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
+
+let supabase = null;
+if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && !SUPABASE_URL.includes('your-project')) {
+  supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  console.log('✅ Supabase connected successfully.');
+} else {
+  console.log('ℹ️ Supabase not configured in .env (running in standalone mode).');
+}
+
+// Helper: Mask phone for privacy logs
+function maskPhone(phone) {
+  if (!phone || phone.length < 7) return phone || 'N/A';
+  return phone.slice(0, 3) + '****' + phone.slice(-3);
+}
+
+// Helper: Send Discord Webhook
+async function sendDiscordNotification({ donorName, message, amount, voucherCode }) {
+  if (!DISCORD_WEBHOOK_URL || DISCORD_WEBHOOK_URL.includes('your-webhook-id')) return;
+
+  try {
+    const formattedAmount = Number(amount).toLocaleString('th-TH', { minimumFractionDigits: 2 });
+    await axios.post(DISCORD_WEBHOOK_URL, {
+      username: 'Ibuki Donation Hub',
+      avatar_url: 'https://yt3.googleusercontent.com/OBkYl58Z5epxx3jW09CTYbX2Xlv4I68fewCAHYM0oOb7eeUDegMFyDwPQuiPRbUYmlf-BVAZBhg=s900-c-k-c0x00ffffff-no-rj',
+      embeds: [
+        {
+          title: '🍵 มีการโดเนทค่าชาเขียวใหม่เข้ามา! (TrueMoney Wallet)',
+          description: `ขอบคุณ **คุณ ${donorName}** ที่ร่วมสนับสนุน Ibuki Ch. 💜💖`,
+          color: 0x10B981,
+          fields: [
+            { name: '💰 ยอดเงินโดเนท', value: `**${formattedAmount} บาท**`, inline: true },
+            { name: '👤 ผู้สนับสนุน', value: donorName, inline: true },
+            { name: '💬 ข้อความถึง Ibuki', value: message ? `> *"${message}"*` : '*ไม่มีข้อความ*', inline: false }
+          ],
+          thumbnail: {
+            url: 'https://yt3.googleusercontent.com/OBkYl58Z5epxx3jW09CTYbX2Xlv4I68fewCAHYM0oOb7eeUDegMFyDwPQuiPRbUYmlf-BVAZBhg=s900-c-k-c0x00ffffff-no-rj'
+          },
+          footer: {
+            text: `Ibuki Ch. 最京いぶき • Voucher: ${voucherCode.slice(0, 8)}...`,
+            icon_url: 'https://yt3.googleusercontent.com/OBkYl58Z5epxx3jW09CTYbX2Xlv4I68fewCAHYM0oOb7eeUDegMFyDwPQuiPRbUYmlf-BVAZBhg=s900-c-k-c0x00ffffff-no-rj'
+          },
+          timestamp: new Date().toISOString()
+        }
+      ]
+    });
+    console.log('📢 Discord notification sent.');
+  } catch (err) {
+    console.error('❌ Failed to send Discord Webhook:', err.message);
+  }
+}
+
+// ==========================================
+// 2. API ENDPOINTS
+// ==========================================
+
+/**
+ * POST /api/donate
+ * แลกซองของขวัญ TrueMoney Wallet เข้าเบอร์ RECEIVER_PHONE (0863714416)
+ */
+app.post('/api/donate', async (req, res) => {
+  // รองรับทั้ง camelCase และ snake_case
+  const voucherUrl = req.body.voucherUrl || req.body.gift_url || req.body.giftUrl;
+  const donorName = req.body.donorName || req.body.sender_name || req.body.donor_name || 'ผู้ไม่ประสงค์ออกนาม';
+  const message = req.body.message || '';
+
+  // 1. ตรวจสอบและดึงรหัส Voucher Code จาก URL
+  if (!voucherUrl) {
+    return res.status(400).json({ success: false, message: 'กรุณากรอกลิงก์ซองของขวัญ TrueMoney Wallet' });
+  }
+
+  let voucherCode = null;
+  const codeMatch = voucherUrl.match(/v=([a-zA-Z0-9_-]+)/) || voucherUrl.match(/\/vouchers\/([a-zA-Z0-9_-]+)/);
+  if (codeMatch && codeMatch[1]) {
+    voucherCode = codeMatch[1];
+  } else if (/^[a-zA-Z0-9_-]{8,64}$/.test(voucherUrl.trim())) {
+    voucherCode = voucherUrl.trim();
+  }
+
+  if (!voucherCode) {
+    return res.status(400).json({ 
+      success: false, 
+      message: 'รูปแบบลิงก์ซองอั่งเปาไม่ถูกต้อง (ต้องมี ?v=...)' 
+    });
+  }
+
+  // 2. ตรวจสอบซองซ้ำใน Supabase
+  if (supabase) {
+    try {
+      const { data: existing } = await supabase
+        .from('donations')
+        .select('id, voucher_code')
+        .eq('voucher_code', voucherCode)
+        .maybeSingle();
+
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: 'ซองของขวัญนี้ถูกใช้งานหรือบันทึกในระบบไปแล้ว'
+        });
+      }
+    } catch (dbCheckErr) {
+      console.warn('DB check error:', dbCheckErr.message);
+    }
+  }
+
+  try {
+    console.log(`🎁 กำลังแลกซอง [${voucherCode}] เข้าเบอร์ [${maskPhone(RECEIVER_PHONE)}]...`);
+
+    // 3. ส่งคำสั่งดึงเงินไปยัง API ของ TrueMoney Wallet
+    let response;
+    let amount = 0;
+
+    try {
+      // Endpoint 1: Standard Campaign Voucher Redeem
+      response = await axios.post(
+        `https://gift.truemoney.com/campaign/vouchers/${voucherCode}/redeem`,
+        {
+          mobile: RECEIVER_PHONE,
+          voucher_hash: voucherCode
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+          },
+          timeout: 12000
+        }
+      );
+    } catch (firstErr) {
+      // Endpoint 2: Fallback v2 giftcards
+      try {
+        response = await axios.post(
+          `https://gift.truemoney.com/v2/giftcards/${voucherCode}/redeem`,
+          {
+            mobile: RECEIVER_PHONE,
+            voucher_hash: voucherCode
+          },
+          {
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 12000
+          }
+        );
+      } catch (secondErr) {
+        throw firstErr; // Throw initial error
+      }
+    }
+
+    const resData = response.data || {};
+    const statusCode = resData.status?.code;
+
+    if (statusCode === 'SUCCESS') {
+      // ดึงยอดเงินที่ได้รับจริง (บาท)
+      if (resData.data?.my_ticket?.amount_baht) {
+        amount = parseFloat(resData.data.my_ticket.amount_baht);
+      } else if (resData.data?.voucher?.redeemed_amount_baht) {
+        amount = parseFloat(resData.data.voucher.redeemed_amount_baht);
+      } else if (resData.data?.voucher?.amount_baht) {
+        amount = parseFloat(resData.data.voucher.amount_baht);
+      }
+
+      if (isNaN(amount) || amount <= 0) amount = 10.00;
+
+      // 4. บันทึกลง Database (Supabase)
+      const cleanDonorName = (donorName || 'ผู้ไม่ประสงค์ออกนาม').trim().slice(0, 100);
+      const cleanMessage = (message || '').trim().slice(0, 500);
+
+      if (supabase) {
+        try {
+          await supabase.from('donations').insert([
+            {
+              donor_name: cleanDonorName,
+              message: cleanMessage,
+              amount: amount,
+              voucher_code: voucherCode,
+              status: 'SUCCESS'
+            }
+          ]);
+          console.log(`💾 บันทึกยอด ${amount} บาท จาก ${cleanDonorName} ลง Supabase สำเร็จ`);
+        } catch (dbInsertErr) {
+          console.error('❌ Supabase Insert Error:', dbInsertErr.message);
+        }
+      }
+
+      // 5. ส่งการแจ้งเตือนเข้า Discord Webhook
+      sendDiscordNotification({
+        donorName: cleanDonorName,
+        message: cleanMessage,
+        amount: amount,
+        voucherCode: voucherCode
+      });
+
+      return res.json({
+        success: true,
+        message: 'โดเนทสำเร็จ! ขอบคุณสำหรับการสนับสนุน',
+        data: {
+          donorName: cleanDonorName,
+          message: cleanMessage,
+          amount: amount
+        }
+      });
+
+    } else {
+      return res.status(400).json({ 
+        success: false, 
+        message: resData.status?.message || 'ซองนี้ถูกใช้งานไปแล้ว หรือหมดอายุ' 
+      });
+    }
+
+  } catch (error) {
+    const statusMsg = error.response?.data?.status?.message;
+    const statusCode = error.response?.data?.status?.code;
+    
+    let userFriendlyMsg = 'ไม่สามารถเติมเงินได้ กรุณาตรวจสอบลิงก์อีกครั้ง';
+    if (statusCode === 'VOUCHER_OUT_OF_STOCK') userFriendlyMsg = 'ซองของขวัญนี้ถูกผู้อื่นรับไปหมดแล้ว';
+    else if (statusCode === 'VOUCHER_EXPIRED') userFriendlyMsg = 'ซองของขวัญนี้หมดอายุแล้ว';
+    else if (statusCode === 'TARGET_USER_REDEEMED') userFriendlyMsg = 'เบอร์นี้ได้รับซองของขวัญนี้ไปแล้ว';
+    else if (statusCode === 'CANNOT_GET_OWN_VOUCHER') userFriendlyMsg = 'ไม่สามารถรับซองของขวัญของตนเองได้';
+    else if (statusMsg) userFriendlyMsg = statusMsg;
+
+    console.error('❌ Error Redeeming TrueMoney Gift:', statusMsg || error.message);
+    return res.status(400).json({ success: false, message: userFriendlyMsg });
+  }
+});
+
+/**
+ * GET /api/stats
+ */
+app.get('/api/stats', async (req, res) => {
+  const goalTarget = 5000;
+  if (!supabase) {
+    return res.json({
+      success: true,
+      data: { total_amount: 3450, total_count: 69, target_amount: goalTarget, percentage: 69.0 }
+    });
+  }
+
+  try {
+    const { data, error } = await supabase.rpc('get_monthly_donation_stats');
+    if (!error && data && data.length > 0) {
+      return res.json({ success: true, data: data[0] });
+    }
+
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    const { data: list } = await supabase
+      .from('donations')
+      .select('amount')
+      .gte('created_at', startOfMonth.toISOString())
+      .eq('status', 'SUCCESS');
+
+    const sum = (list || []).reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+    const count = (list || []).length;
+    const pct = Math.min(Math.round((sum / goalTarget) * 1000) / 10, 100);
+
+    return res.json({
+      success: true,
+      data: { total_amount: sum, total_count: count, target_amount: goalTarget, percentage: pct }
+    });
+  } catch (err) {
+    res.json({ success: true, data: { total_amount: 0, total_count: 0, target_amount: goalTarget, percentage: 0 } });
+  }
+});
+
+/**
+ * GET /api/recent-donations
+ */
+app.get('/api/recent-donations', async (req, res) => {
+  if (!supabase) {
+    return res.json({
+      success: true,
+      data: [
+        { donor_name: '🦊 น้องมิว', message: 'สู้ๆ นะครับต้าวไอบุกิ ขอให้คลิปปังๆ ทุกคลิปเลยน้า! 💖', amount: 50 },
+        { donor_name: '👑 K.Bank_Gamer', message: 'ค่าชาเขียวแก้วโตๆ สตรีมสนุกมากครับแก๊งขี้โม้ 🎮', amount: 100 },
+        { donor_name: '🍵 Fanclub_Ibuki', message: 'เลี้ยงชาเขียวเย็น เป็นกำลังใจให้ครับ!', amount: 30 }
+      ]
+    });
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('donations')
+      .select('id, donor_name, message, amount, created_at')
+      .eq('status', 'SUCCESS')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (error) throw error;
+    return res.json({ success: true, data: data || [] });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+
+// ==========================================
+// 3. START SERVER
+// ==========================================
+app.listen(PORT, () => {
+  console.log(`
+  ======================================================
+  🚀 Ibuki TrueMoney Donation API is running!
+  📡 Port: ${PORT}
+  📱 Receiver Phone: ${maskPhone(RECEIVER_PHONE)}
+  🗄️ Supabase: ${Boolean(supabase) ? 'Connected' : 'Offline / Standalone'}
+  📢 Discord Webhook: ${Boolean(DISCORD_WEBHOOK_URL && !DISCORD_WEBHOOK_URL.includes('your-webhook-id')) ? 'Active' : 'Not Set'}
+  ======================================================
+  `);
+});
