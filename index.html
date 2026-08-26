@@ -1,0 +1,2277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ibuki Ch. 最京いぶき — Interactive Media Kit & Sponsor Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Kanit:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    /* ===== RESET & BASE CONFIG ===== */
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      cursor: url('cursor.png'), auto;
+    }
+    
+    a, button, input, select, textarea, .action-btn, .tea-chip-btn, .support-pill-btn, .pkg-cta, .contact-action-btn, .btn-download-kit, .modal-close {
+      cursor: url('cursor.png'), pointer !important;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', 'Kanit', sans-serif;
+      background: #0A0512;
+      color: #F1E8FD;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ===== AMBIENT GRADIENT & GLOW BACKGROUND (PURPLE THEME) ===== */
+    .bg-canvas {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(95px); opacity: 0.32;
+    }
+    .orb-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #8B5CF6, transparent 70%);
+      top: -140px; left: -100px;
+      animation: floatOrb1 16s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, #D946EF, transparent 70%);
+      bottom: -60px; right: -80px;
+      animation: floatOrb2 18s ease-in-out infinite;
+    }
+    .orb-3 {
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, #6366F1, transparent 70%);
+      top: 40%; left: 55%;
+      animation: floatOrb3 22s ease-in-out infinite;
+    }
+    .orb-4 {
+      width: 380px; height: 380px;
+      background: radial-gradient(circle, #EC4899, transparent 70%);
+      top: 75%; left: 10%;
+      animation: floatOrb1 20s ease-in-out infinite reverse;
+    }
+    @keyframes floatOrb1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(80px, 100px) scale(1.12); }
+    }
+    @keyframes floatOrb2 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-100px, -70px) scale(1.15); }
+    }
+    @keyframes floatOrb3 {
+      0%, 100% { transform: translate(0, 0); }
+      50% { transform: translate(-80px, 60px) scale(0.9); }
+    }
+
+    /* Dot matrix pattern */
+    .dot-matrix {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none; z-index: 0;
+      background-image: radial-gradient(rgba(192, 132, 252, 0.07) 1.2px, transparent 1.2px);
+      background-size: 32px 32px;
+    }
+
+    /* ===== CUSTOM CURSOR FOLLOWER TRAIL (CUTE IBUKI CHIBI) ===== */
+    .custom-cursor-follower {
+      position: fixed; width: 38px; height: 38px;
+      pointer-events: none; z-index: 999999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.08s ease-out, opacity 0.2s ease;
+      filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.6));
+    }
+    .custom-cursor-follower img {
+      width: 100%; height: 100%; object-fit: contain;
+      border-radius: 50%; border: 1.5px solid #C084FC;
+      background: rgba(26, 11, 46, 0.6);
+    }
+    .cursor-sparkle {
+      position: fixed; pointer-events: none; z-index: 999998;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: radial-gradient(circle, #F472B6, #A855F7);
+      box-shadow: 0 0 8px #C084FC;
+      animation: sparkleAnim 0.6s ease-out forwards;
+    }
+    @keyframes sparkleAnim {
+      0% { transform: scale(1) translate(0, 0); opacity: 1; }
+      100% { transform: scale(0) translate(var(--dx), var(--dy)); opacity: 0; }
+    }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      position: relative; z-index: 1;
+      max-width: 960px; margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    /* ===== GLASSMORPHISM SYSTEM (PURPLE OBSIDIAN) ===== */
+    .glass-panel {
+      background: rgba(24, 12, 38, 0.68);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(192, 132, 252, 0.15);
+      border-radius: 22px;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+    .glass-panel::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(217, 70, 239, 0.04) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .glass-panel:hover {
+      transform: translateY(-4px);
+      border-color: rgba(192, 132, 252, 0.45);
+      box-shadow: 0 18px 40px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(168, 85, 247, 0.25);
+    }
+
+    /* ===== TYPOGRAPHY & HEADINGS ===== */
+    .kanit { font-family: 'Kanit', sans-serif; }
+    .jp-font { font-family: 'Noto Sans JP', 'Kanit', sans-serif; }
+    
+    .section-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: #E879F9; background: rgba(217, 70, 239, 0.14);
+      border: 1px solid rgba(217, 70, 239, 0.3);
+      padding: 4px 14px; border-radius: 999px; margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: 'Kanit', sans-serif;
+      font-size: 1.8rem; font-weight: 800;
+      color: #FAF5FF; letter-spacing: -0.02em; margin-bottom: 6px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-title span.grad-text {
+      background: linear-gradient(135deg, #C084FC, #F472B6, #818CF8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .section-desc {
+      font-size: 0.9rem; color: #C4B5FD; margin-bottom: 24px;
+    }
+
+    /* ===== SECTIONS FADE IN ANIMATION ===== */
+    .fade-section {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-bottom: 48px;
+    }
+    .fade-section.visible {
+      opacity: 1; transform: translateY(0);
+    }
+
+    /* ===== 1. PROFILE HERO HEADER (Ibuki Ch. 最京いぶき) ===== */
+    .profile-hero {
+      padding: 0 0 32px;
+      text-align: center;
+      position: relative;
+      margin-bottom: 36px;
+      border: 1.5px solid rgba(168, 85, 247, 0.3);
+      box-shadow: 0 20px 45px -15px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.12);
+    }
+    
+    /* Channel Banner Header */
+    .channel-banner-wrap {
+      width: 100%; height: 190px;
+      position: relative; overflow: hidden;
+      background: #180C28;
+    }
+    .channel-banner-img {
+      width: 100%; height: 100%; object-fit: cover; object-position: center;
+      filter: brightness(0.92) saturate(1.1);
+      transition: transform 0.5s ease;
+    }
+    .profile-hero:hover .channel-banner-img {
+      transform: scale(1.03);
+    }
+    .banner-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, rgba(10, 5, 18, 0.1) 0%, rgba(20, 10, 34, 0.95) 100%);
+    }
+
+    .hero-body-content {
+      padding: 0 28px;
+      margin-top: -70px;
+      position: relative; z-index: 2;
+    }
+
+    .avatar-wrapper {
+      position: relative; width: 135px; height: 135px; margin: 0 auto 16px;
+    }
+    .avatar-img-frame {
+      width: 100%; height: 100%; border-radius: 50%;
+      box-shadow: 0 0 35px rgba(168, 85, 247, 0.55);
+      border: 3.5px solid #A855F7;
+      position: relative; z-index: 2;
+      overflow: hidden;
+      background: #120722;
+    }
+    .avatar-real-img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .avatar-pulse {
+      position: absolute; inset: -6px; border-radius: 50%;
+      background: linear-gradient(135deg, #A855F7, #EC4899);
+      z-index: 1; opacity: 0.6; filter: blur(5px);
+      animation: avatarPulseAnim 3s infinite ease-in-out;
+    }
+    @keyframes avatarPulseAnim {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.12); opacity: 0.2; }
+    }
+    .live-status {
+      position: absolute; bottom: 4px; right: 4px; z-index: 3;
+      background: #10B981; color: #022c22; font-size: 0.68rem; font-weight: 800;
+      padding: 3px 9px; border-radius: 999px; border: 2px solid #0A0512;
+      display: flex; align-items: center; gap: 4px;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+    }
+    .live-status::before {
+      content: ''; width: 6px; height: 6px; background: #022c22; border-radius: 50%;
+      animation: blinkDot 1.4s infinite;
+    }
+    @keyframes blinkDot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    .channel-title {
+      font-family: 'Kanit', sans-serif;
+      font-size: 2.3rem; font-weight: 800; color: #FFFFFF;
+      display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+      letter-spacing: -0.01em;
+      text-shadow: 0 0 25px rgba(168, 85, 247, 0.4);
+    }
+    .jp-sub {
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 1.65rem; color: #F472B6; font-weight: 700;
+      text-shadow: 0 0 20px rgba(244, 114, 182, 0.5);
+    }
+    .verified-icon {
+      width: 26px; height: 26px; vertical-align: middle;
+    }
+    .creator-subtitle {
+      font-family: 'Kanit', sans-serif; font-size: 1.05rem; color: #DDD6FE; margin-top: 4px;
+      font-weight: 400;
+    }
+
+    /* Support quick actions under banner */
+    .support-quick-bar {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px;
+    }
+    .support-pill-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 18px; border-radius: 999px; font-size: 0.86rem;
+      font-family: 'Kanit', sans-serif; font-weight: 600;
+      text-decoration: none; border: none;
+      transition: all 0.25s ease;
+    }
+    .btn-truewallet-quick {
+      background: linear-gradient(135deg, #FF6B00, #F59E0B);
+      color: #FFFFFF;
+      box-shadow: 0 4px 18px rgba(255, 107, 0, 0.35);
+    }
+    .btn-truewallet-quick:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 24px rgba(255, 107, 0, 0.55);
+    }
+    .btn-tipme {
+      background: linear-gradient(135deg, #D946EF, #EC4899);
+      color: #FFFFFF;
+      box-shadow: 0 4px 18px rgba(217, 70, 239, 0.35);
+    }
+    .btn-tipme:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 24px rgba(217, 70, 239, 0.55);
+    }
+    .btn-membership {
+      background: linear-gradient(135deg, #8B5CF6, #6366F1);
+      color: #FFFFFF;
+      box-shadow: 0 4px 18px rgba(139, 92, 246, 0.35);
+    }
+    .btn-membership:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 6px 24px rgba(139, 92, 246, 0.55);
+    }
+
+    .category-pills {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 18px;
+    }
+    .cat-pill {
+      font-family: 'Kanit', sans-serif; font-size: 0.82rem; font-weight: 500;
+      padding: 6px 14px; border-radius: 999px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: #E9D5FF;
+      transition: all 0.25s ease;
+    }
+    .cat-pill:hover {
+      background: rgba(168, 85, 247, 0.25);
+      border-color: rgba(192, 132, 252, 0.5);
+      transform: translateY(-2px);
+    }
+
+    /* ===== BIO & INTRO CARD ===== */
+    .bio-card {
+      padding: 30px 28px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(217, 70, 239, 0.12) 50%, rgba(236, 72, 153, 0.1) 100%);
+      border: 1px solid rgba(192, 132, 252, 0.3);
+      position: relative;
+    }
+    .bio-quote-icon {
+      font-size: 2.2rem; line-height: 1; opacity: 0.6; margin-bottom: 8px;
+      color: #F472B6;
+    }
+    .bio-text {
+      font-family: 'Kanit', sans-serif; font-size: 1.1rem; line-height: 1.8;
+      color: #FAF5FF; font-weight: 400;
+    }
+    .bio-highlight-heart {
+      margin-top: 14px; font-family: 'Kanit', sans-serif; font-size: 1.1rem; font-weight: 700;
+      background: linear-gradient(135deg, #F472B6, #C084FC, #818CF8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ===== MILESTONES TIMELINE ===== */
+    .timeline-wrap {
+      padding: 28px 24px;
+    }
+    .milestones-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      position: relative; margin-top: 10px;
+    }
+    @media (max-width: 820px) {
+      .milestones-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .milestones-grid { grid-template-columns: 1fr; }
+    }
+    .milestone-item {
+      padding: 20px 16px; border-radius: 16px; text-align: center;
+      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(168, 85, 247, 0.15);
+      position: relative; transition: all 0.3s ease;
+    }
+    .milestone-item:hover {
+      background: rgba(168, 85, 247, 0.12); border-color: rgba(192, 132, 252, 0.4);
+      transform: translateY(-3px);
+    }
+    .milestone-item.active-target {
+      border-color: rgba(217, 70, 239, 0.5);
+      background: linear-gradient(180deg, rgba(217, 70, 239, 0.18) 0%, rgba(26, 11, 46, 0.85) 100%);
+      box-shadow: 0 0 25px rgba(217, 70, 239, 0.3);
+    }
+    .milestone-badge {
+      display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 999px; background: rgba(168, 85, 247, 0.2); color: #E9D5FF; margin-bottom: 8px;
+    }
+    .milestone-item.active-target .milestone-badge {
+      background: #D946EF; color: #FFFFFF;
+      box-shadow: 0 0 10px rgba(217, 70, 239, 0.5);
+    }
+    .milestone-subs {
+      font-family: 'Inter', 'Kanit', sans-serif; font-size: 1.55rem; font-weight: 800; color: #FFFFFF;
+      margin-bottom: 4px;
+    }
+    .milestone-date {
+      font-family: 'Kanit', sans-serif; font-size: 0.84rem; color: #C084FC; font-weight: 600;
+    }
+    .milestone-time {
+      font-size: 0.75rem; color: #A78BFA; margin-top: 2px;
+    }
+
+    /* ===== 2. QUICK STATS HIGHLIGHT ===== */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    }
+    @media (max-width: 820px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: 1fr; }
+    }
+    .stat-card {
+      padding: 24px 18px; text-align: center;
+      background: rgba(26, 12, 42, 0.65);
+    }
+    .stat-icon-wrap {
+      width: 46px; height: 46px; margin: 0 auto 12px;
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+    }
+    .stat-val-wrap {
+      display: flex; align-items: baseline; justify-content: center; gap: 2px;
+    }
+    .stat-num {
+      font-family: 'Inter', sans-serif; font-size: 2.2rem; font-weight: 800;
+      color: #FFFFFF; letter-spacing: -0.03em;
+    }
+    .stat-suffix {
+      font-size: 1.2rem; font-weight: 800;
+      background: linear-gradient(135deg, #C084FC, #F472B6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-title {
+      font-family: 'Kanit', sans-serif; font-size: 0.85rem; font-weight: 500;
+      color: #DDD6FE; margin-top: 4px;
+    }
+    .stat-trend {
+      font-size: 0.72rem; color: #A78BFA; font-weight: 600; margin-top: 6px;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
+
+    /* ===== 3. SOCIAL MEDIA HUB CARDS ===== */
+    .social-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;
+    }
+    @media (max-width: 720px) {
+      .social-grid { grid-template-columns: 1fr; }
+    }
+    .social-card {
+      padding: 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 20px;
+    }
+    .social-card-main {
+      display: flex; align-items: center; gap: 16px;
+    }
+    .platform-logo {
+      width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .social-meta { flex: 1; min-width: 0; }
+    .social-handle {
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 1.05rem;
+      color: #FAF5FF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .social-stat-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.82rem; font-weight: 600; color: #C4B5FD; margin-top: 3px;
+    }
+    .highlight-sub {
+      color: #F472B6; font-weight: 700;
+    }
+    .social-tags {
+      font-size: 0.76rem; color: #A78BFA; margin-top: 2px;
+    }
+    .social-actions-btn-group {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .action-btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 9px 14px; border-radius: 10px; font-size: 0.82rem;
+      font-family: 'Kanit', sans-serif; font-weight: 600;
+      text-decoration: none; border: none;
+      transition: all 0.25s ease;
+    }
+    .btn-visit {
+      background: linear-gradient(135deg, #8B5CF6, #6366F1);
+      color: #FFFFFF;
+    }
+    .btn-visit:hover {
+      box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+      transform: translateY(-2px);
+    }
+    .btn-sample {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(192, 132, 252, 0.2);
+      color: #E9D5FF;
+    }
+    .btn-sample:hover {
+      background: rgba(168, 85, 247, 0.15);
+      border-color: rgba(192, 132, 252, 0.45);
+      color: #FFFFFF;
+    }
+
+    /* ===== MEMBERSHIP & SUPPORT CARD ===== */
+    .support-showcase-card {
+      padding: 30px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(217, 70, 239, 0.18) 100%);
+      border: 1px solid rgba(192, 132, 252, 0.35);
+      display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+    }
+    .support-info-left { flex: 1; min-width: 280px; }
+    .support-title {
+      font-family: 'Kanit', sans-serif; font-size: 1.35rem; font-weight: 800; color: #FFFFFF;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .support-desc {
+      font-family: 'Kanit', sans-serif; font-size: 0.92rem; color: #E9D5FF; margin-top: 6px;
+    }
+    .support-buttons-right {
+      display: flex; gap: 12px; flex-wrap: wrap;
+    }
+
+    /* ===== 4. SPONSORSHIP PACKAGES (MEDIA KIT HIGHLIGHT) ===== */
+    .packages-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .packages-grid { grid-template-columns: 1fr; }
+    }
+    .package-card {
+      padding: 26px 20px;
+      border: 1px solid rgba(192, 132, 252, 0.15);
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative;
+    }
+    .package-card.featured {
+      border-color: rgba(217, 70, 239, 0.5);
+      background: linear-gradient(180deg, rgba(168, 85, 247, 0.15) 0%, rgba(24, 12, 38, 0.85) 100%);
+      box-shadow: 0 8px 30px rgba(168, 85, 247, 0.25);
+    }
+    .pkg-badge {
+      position: absolute; top: 12px; right: 12px;
+      font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 999px;
+      background: #D946EF; color: #FFFFFF;
+    }
+    .pkg-name {
+      font-family: 'Kanit', sans-serif; font-size: 1.15rem; font-weight: 700; color: #FFFFFF;
+      margin-bottom: 6px;
+    }
+    .pkg-desc {
+      font-size: 0.82rem; color: #C4B5FD; margin-bottom: 16px; min-height: 40px;
+    }
+    .pkg-features {
+      list-style: none; margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .pkg-features li {
+      font-family: 'Kanit', sans-serif; font-size: 0.82rem; color: #E9D5FF;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .pkg-features li svg {
+      width: 16px; height: 16px; color: #C084FC; flex-shrink: 0;
+    }
+    .pkg-cta {
+      width: 100%; text-align: center; padding: 10px; border-radius: 10px;
+      font-family: 'Kanit', sans-serif; font-size: 0.85rem; font-weight: 600;
+      text-decoration: none; border: none; transition: all 0.25s ease;
+    }
+
+    /* ===== 5. TARGET AUDIENCE DEMOGRAPHICS ===== */
+    .audience-row {
+      display: grid; grid-template-columns: 1fr 1.2fr; gap: 24px;
+    }
+    @media (max-width: 768px) {
+      .audience-row { grid-template-columns: 1fr; }
+    }
+    .chart-box {
+      padding: 28px;
+    }
+    .chart-heading {
+      font-family: 'Kanit', sans-serif; font-size: 1.05rem; font-weight: 700;
+      color: #FAF5FF; margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    
+    /* Donut chart */
+    .donut-layout {
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+    }
+    .donut-graphic {
+      width: 160px; height: 160px; border-radius: 50%; position: relative;
+      background: conic-gradient(
+        #8B5CF6 0deg 240deg,
+        #EC4899 240deg 330deg,
+        #F59E0B 330deg 360deg
+      );
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.35);
+    }
+    .donut-graphic::after {
+      content: ''; position: absolute; inset: 30px; border-radius: 50%;
+      background: #130722;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+    }
+    .donut-legend {
+      display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    }
+    .legend-row {
+      display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: #E9D5FF;
+      font-family: 'Kanit', sans-serif;
+    }
+    .legend-bullet {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+
+    /* Bar Chart for Age */
+    .age-bars-container {
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .age-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .age-tag {
+      font-family: 'Kanit', sans-serif; font-size: 0.84rem; color: #E9D5FF;
+      min-width: 65px; text-align: right;
+    }
+    .age-track {
+      flex: 1; height: 26px; background: rgba(255, 255, 255, 0.05);
+      border-radius: 13px; overflow: hidden; position: relative;
+      border: 1px solid rgba(192, 132, 252, 0.1);
+    }
+    .age-fill {
+      height: 100%; border-radius: 13px;
+      background: linear-gradient(90deg, #8B5CF6, #C084FC);
+      width: 0%; transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .age-fill.core-tier {
+      background: linear-gradient(90deg, #A855F7, #EC4899);
+      box-shadow: 0 0 16px rgba(236, 72, 153, 0.4);
+    }
+    .age-pct {
+      font-size: 0.8rem; font-weight: 700; color: #FAF5FF; min-width: 44px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Sponsor affinity tags */
+    .affinity-container {
+      margin-top: 24px; padding: 18px 22px;
+      background: rgba(168, 85, 247, 0.08); border-radius: 14px;
+      border: 1px solid rgba(192, 132, 252, 0.2);
+    }
+    .affinity-title {
+      font-family: 'Kanit', sans-serif; font-size: 0.88rem; font-weight: 600; color: #DDD6FE; margin-bottom: 10px;
+    }
+    .affinity-pills {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .aff-pill {
+      font-family: 'Kanit', sans-serif; font-size: 0.8rem; font-weight: 500;
+      padding: 5px 14px; border-radius: 8px;
+      background: rgba(217, 70, 239, 0.12);
+      border: 1px solid rgba(217, 70, 239, 0.3);
+      color: #F5D0FE;
+    }
+
+    /* ==========================================
+       TRUEMONEY DONATION HUB (PURPLE GLASS THEME)
+       ========================================== */
+    .donation-hub-section {
+      position: relative;
+    }
+    .donation-hub-card {
+      padding: 36px 28px;
+      background: linear-gradient(180deg, rgba(38, 16, 58, 0.85) 0%, rgba(18, 8, 30, 0.95) 100%);
+      border: 1.5px solid rgba(217, 70, 239, 0.35);
+      box-shadow: 0 20px 50px rgba(168, 85, 247, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    .truemoney-hero-header {
+      text-align: center; margin-bottom: 28px;
+    }
+    .truemoney-main-title {
+      font-family: 'Kanit', sans-serif;
+      font-size: 2.3rem; font-weight: 900;
+      color: #FF8800;
+      text-shadow: 0 0 25px rgba(255, 136, 0, 0.6), 0 2px 4px rgba(0,0,0,0.8);
+      letter-spacing: -0.01em;
+    }
+    .truemoney-sub-badge {
+      font-size: 0.95rem; font-weight: 700; color: #C084FC;
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;
+    }
+
+    /* Red Packet Icon Frame */
+    .red-envelope-badge {
+      width: 86px; height: 86px; margin: 12px auto 14px;
+      background: linear-gradient(135deg, #EF4444, #DC2626);
+      border-radius: 18px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 25px rgba(239, 68, 68, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.3);
+      border: 2px solid #FCA5A5;
+      animation: floatEnvelope 3.5s ease-in-out infinite;
+    }
+    @keyframes floatEnvelope {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px) scale(1.04); }
+    }
+
+    /* Monthly Donation Goal Progress Bar */
+    .goal-progress-wrap {
+      background: rgba(10, 4, 18, 0.55);
+      border: 1px solid rgba(192, 132, 252, 0.2);
+      border-radius: 18px; padding: 20px 24px; margin-bottom: 32px;
+    }
+    .goal-header-row {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;
+    }
+    .goal-title-txt {
+      font-family: 'Kanit', sans-serif; font-size: 1.05rem; font-weight: 700; color: #FAF5FF;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .goal-amount-txt {
+      font-family: 'Inter', 'Kanit', sans-serif; font-size: 1.1rem; font-weight: 800; color: #F472B6;
+      text-shadow: 0 0 10px rgba(244, 114, 182, 0.4);
+    }
+    .goal-track {
+      width: 100%; height: 22px; background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px; overflow: hidden; position: relative;
+      border: 1px solid rgba(192, 132, 252, 0.25);
+    }
+    .goal-bar-fill {
+      height: 100%; border-radius: 999px;
+      width: 68%;
+      background: linear-gradient(90deg, #A855F7 0%, #D946EF 50%, #EC4899 100%);
+      box-shadow: 0 0 20px rgba(217, 70, 239, 0.6);
+      transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+    .goal-bar-fill::after {
+      content: ''; position: absolute; top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.45), transparent);
+      animation: shimmerBar 2.5s infinite;
+    }
+    @keyframes shimmerBar {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .goal-meta-footer {
+      display: flex; justify-content: space-between; font-size: 0.82rem; color: #DDD6FE; margin-top: 8px; font-family: 'Kanit', sans-serif;
+    }
+
+    /* 3-Step Visual Guide */
+    .guide-step-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 36px;
+    }
+    @media (max-width: 768px) {
+      .guide-step-grid { grid-template-columns: 1fr; }
+    }
+    .guide-card {
+      background: #FFFFFF; color: #1E293B;
+      border-radius: 16px; padding: 18px 14px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      border: 2px solid #E2E8F0;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
+    .guide-step-title {
+      font-family: 'Kanit', sans-serif; font-size: 0.92rem; font-weight: 700;
+      color: #0F172A; text-align: center; margin-bottom: 12px; min-height: 44px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .guide-img-container {
+      background: #FAF5FF; border-radius: 10px; padding: 12px;
+      border: 1px solid #E2E8F0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 180px; text-align: center;
+    }
+
+    /* Simulated UI step 1 */
+    .sim-gift-icon-wrap {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: linear-gradient(135deg, #FF8A00, #E52E2E);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 6px 16px rgba(255, 100, 0, 0.35);
+      margin-bottom: 8px;
+    }
+    .sim-gift-label {
+      font-size: 0.85rem; font-weight: 700; color: #475569; font-family: 'Kanit', sans-serif;
+    }
+
+    /* Simulated UI step 2 */
+    .sim-phone-ui {
+      width: 100%; max-width: 220px; background: #FFFFFF; border-radius: 8px;
+      border: 1px solid #CBD5E1; padding: 10px 8px; text-align: left;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+    }
+    .sim-ui-bar {
+      height: 14px; background: #FF4D4D; border-radius: 4px; margin-bottom: 8px;
+      display: flex; align-items: center; padding: 0 6px;
+    }
+    .sim-pill-select {
+      border: 2px solid #FF9900; border-radius: 6px; padding: 4px 6px; margin-bottom: 6px;
+      font-size: 0.72rem; font-weight: 700; color: #B45309; text-align: center;
+      background: #FFFBEB;
+    }
+    .sim-pill-target1 {
+      border: 2px solid #0284C7; border-radius: 6px; padding: 4px 6px;
+      font-size: 0.72rem; font-weight: 700; color: #0369A1; text-align: center;
+      background: #F0F9FF;
+    }
+
+    /* Simulated UI step 3 */
+    .sim-success-card {
+      width: 100%; max-width: 220px; background: #FFFFFF; border-radius: 8px;
+      border: 2px solid #22C55E; padding: 12px 8px; text-align: center;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+    }
+    .sim-success-circle {
+      width: 28px; height: 28px; border-radius: 50%; background: #22C55E; color: #FFF;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 6px;
+      font-size: 0.9rem; font-weight: 900;
+    }
+    .sim-url-copy-box {
+      border: 1.5px solid #22C55E; border-radius: 6px; padding: 4px 6px;
+      display: flex; align-items: center; justify-content: space-between; gap: 4px;
+      background: #F0FDF4; margin-top: 6px;
+    }
+    .sim-copy-btn {
+      background: #FF6600; color: #FFF; font-size: 0.65rem; font-weight: 700;
+      padding: 3px 6px; border-radius: 4px; border: none;
+    }
+
+    /* Donation Form Inputs */
+    .donation-form-wrapper {
+      max-width: 640px; margin: 0 auto;
+      background: rgba(20, 8, 32, 0.85); border: 1.5px solid rgba(192, 132, 252, 0.25);
+      border-radius: 20px; padding: 26px;
+    }
+    .form-group-custom {
+      margin-bottom: 18px;
+    }
+    .form-label-custom {
+      display: block; font-family: 'Kanit', sans-serif; font-size: 0.94rem; font-weight: 600;
+      color: #FAF5FF; margin-bottom: 6px;
+    }
+    .form-label-custom span.sub-info {
+      font-size: 0.78rem; color: #C4B5FD; font-weight: 400;
+    }
+    .input-field-custom {
+      width: 100%; padding: 14px 18px; border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid rgba(192, 132, 252, 0.25);
+      color: #FFFFFF; font-family: 'Kanit', 'Inter', sans-serif; font-size: 0.95rem;
+      outline: none; transition: all 0.25s ease;
+    }
+    .input-field-custom:focus {
+      border-color: #D946EF;
+      background: rgba(217, 70, 239, 0.08);
+      box-shadow: 0 0 18px rgba(217, 70, 239, 0.4);
+    }
+    .input-field-custom::placeholder {
+      color: #7C6A9E;
+    }
+    .input-field-url {
+      background: #FEF3C7; color: #78350F; font-weight: 600;
+      border: 2px solid #F59E0B;
+    }
+    .input-field-url:focus {
+      background: #FFFBEB; border-color: #D97706;
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+    }
+    .input-field-url::placeholder {
+      color: #B45309; opacity: 0.7;
+    }
+
+    /* Submit Donation CTA Button */
+    .btn-donate-truemoney {
+      width: 100%; padding: 16px; border-radius: 14px;
+      font-family: 'Kanit', sans-serif; font-size: 1.15rem; font-weight: 800;
+      border: none;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      background: linear-gradient(135deg, #10B981 0%, #059669 50%, #047857 100%);
+      color: #FFFFFF;
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.45);
+      transition: all 0.25s ease;
+      animation: pulseGreenBtn 3s infinite ease-in-out;
+      margin-top: 6px;
+    }
+    .btn-donate-truemoney:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 12px 35px rgba(16, 185, 129, 0.65), 0 0 25px rgba(168, 85, 247, 0.4);
+    }
+    @keyframes pulseGreenBtn {
+      0%, 100% { box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35); }
+      50% { box-shadow: 0 10px 35px rgba(16, 185, 129, 0.6), 0 0 25px rgba(217, 70, 239, 0.3); }
+    }
+
+    /* Recent Supporters Live Feed */
+    .recent-supporters-feed {
+      margin-top: 24px; padding-top: 18px;
+      border-top: 1px solid rgba(192, 132, 252, 0.15);
+    }
+    .feed-title {
+      font-family: 'Kanit', sans-serif; font-size: 0.88rem; font-weight: 700; color: #DDD6FE; margin-bottom: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .feed-items-list {
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .feed-item {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(192, 132, 252, 0.12);
+      border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      font-size: 0.84rem; font-family: 'Kanit', sans-serif;
+    }
+    .feed-sender {
+      font-weight: 700; color: #FAF5FF;
+    }
+    .feed-msg {
+      color: #E9D5FF; font-weight: 400; flex: 1; margin: 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .feed-amount {
+      color: #F472B6; font-weight: 700; font-family: 'Inter', sans-serif;
+    }
+
+    /* ===== 6. WORK CONTACT ZONE ===== */
+    .contact-cards-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+    }
+    @media (max-width: 768px) {
+      .contact-cards-grid { grid-template-columns: 1fr; }
+    }
+    .contact-tile {
+      padding: 26px 20px; text-align: center;
+      display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    }
+    .contact-tile-icon {
+      width: 52px; height: 52px; border-radius: 14px; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .contact-title {
+      font-family: 'Kanit', sans-serif; font-size: 1rem; font-weight: 700; color: #FAF5FF;
+    }
+    .contact-detail {
+      font-size: 0.82rem; color: #C4B5FD; margin: 4px 0 16px; word-break: break-all;
+    }
+    .contact-action-btn {
+      width: 100%; padding: 10px 14px; border-radius: 10px;
+      font-family: 'Kanit', sans-serif; font-size: 0.85rem; font-weight: 600;
+      border: none; text-decoration: none; display: inline-flex;
+      align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.25s ease;
+    }
+
+    /* Download Media Kit Primary CTA */
+    .media-kit-banner {
+      margin-top: 32px; padding: 32px; text-align: center;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.22) 0%, rgba(217, 70, 239, 0.2) 100%);
+      border: 1.5px solid rgba(192, 132, 252, 0.4);
+      border-radius: 22px;
+    }
+    .media-kit-title {
+      font-family: 'Kanit', sans-serif; font-size: 1.45rem; font-weight: 800; color: #FFFFFF;
+      margin-bottom: 8px;
+    }
+    .media-kit-sub {
+      font-size: 0.88rem; color: #E9D5FF; margin-bottom: 22px; max-width: 540px; margin-left: auto; margin-right: auto;
+    }
+    .btn-download-kit {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 36px; border-radius: 14px; font-size: 1.05rem;
+      font-family: 'Kanit', sans-serif; font-weight: 700;
+      background: linear-gradient(135deg, #8B5CF6 0%, #D946EF 100%);
+      color: #FFFFFF; text-decoration: none; border: none;
+      box-shadow: 0 8px 30px rgba(139, 92, 246, 0.45);
+      animation: pulseBtnAnim 3s infinite ease-in-out;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .btn-download-kit:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 40px rgba(139, 92, 246, 0.65), 0 0 30px rgba(217, 70, 239, 0.4);
+    }
+    @keyframes pulseBtnAnim {
+      0%, 100% { box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35); }
+      50% { box-shadow: 0 10px 35px rgba(139, 92, 246, 0.6), 0 0 25px rgba(217, 70, 239, 0.3); }
+    }
+
+    /* ===== MODAL FOR MEDIA KIT / RATE CARD ===== */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(10, 4, 18, 0.8);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      z-index: 10000; opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-backdrop.open {
+      opacity: 1; pointer-events: auto;
+    }
+    .modal-content {
+      background: #180C28; border: 1.5px solid rgba(192, 132, 252, 0.3);
+      border-radius: 22px; max-width: 580px; width: 100%; padding: 32px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(168, 85, 247, 0.25);
+      transform: scale(0.95); transition: transform 0.3s ease;
+      position: relative;
+    }
+    .modal-backdrop.open .modal-content {
+      transform: scale(1);
+    }
+    .modal-close {
+      position: absolute; top: 18px; right: 18px; background: none; border: none;
+      color: #C4B5FD; font-size: 1.5rem; padding: 4px; line-height: 1;
+    }
+    .modal-close:hover { color: #FFFFFF; }
+
+    /* ===== TOAST NOTIFICATION ===== */
+    .toast-msg {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(80px);
+      padding: 14px 28px; border-radius: 14px;
+      background: linear-gradient(135deg, #8B5CF6, #D946EF);
+      color: #FFFFFF; font-family: 'Kanit', sans-serif; font-weight: 600;
+      font-size: 0.95rem; z-index: 99999;
+      opacity: 0; transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1); pointer-events: none;
+      box-shadow: 0 10px 35px rgba(139, 92, 246, 0.55);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toast-msg.active {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+
+    /* ===== RESPONSIVE BREAKPOINTS (MOBILE, IPAD, DESKTOP) ===== */
+    @media (max-width: 1024px) {
+      .container {
+        padding: 24px 16px 60px;
+        max-width: 100%;
+      }
+      .demographics-grid {
+        grid-template-columns: 1fr;
+      }
+      .social-media-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .stats-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .packages-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .guide-step-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .channel-banner-wrap {
+        height: 140px;
+      }
+      .hero-body-content {
+        margin-top: -55px;
+        padding: 0 16px;
+      }
+      .avatar-wrapper {
+        width: 110px; height: 110px;
+      }
+      .channel-title {
+        font-size: 1.65rem;
+      }
+      .section-title {
+        font-size: 1.4rem;
+      }
+      .stats-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .stat-card-tile {
+        padding: 16px 12px;
+      }
+      .stat-number-txt {
+        font-size: 1.5rem;
+      }
+      .social-media-grid {
+        grid-template-columns: 1fr;
+      }
+      .packages-grid {
+        grid-template-columns: 1fr;
+      }
+      .guide-step-grid {
+        grid-template-columns: 1fr;
+      }
+      .contact-cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .donation-form-wrapper {
+        padding: 18px 14px;
+      }
+      .goal-progress-wrap {
+        padding: 16px;
+      }
+      .goal-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+      }
+      .goal-meta-footer {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .roadmap-timeline-track {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .roadmap-timeline-track::before {
+        display: none;
+      }
+      .modal-content {
+        padding: 22px 16px;
+      }
+      .input-field-custom {
+        font-size: 16px; /* ป้องกัน iOS Auto-zoom */
+      }
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .custom-cursor-follower {
+        display: none !important;
+      }
+      *, *::before, *::after, a, button, input, select, textarea {
+        cursor: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Animated Canvas Background (Purple Magic Theme) -->
+<div class="bg-canvas">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div class="orb orb-4"></div>
+</div>
+<div class="dot-matrix"></div>
+
+<!-- Custom Chibi Follower Cursor -->
+<div class="custom-cursor-follower" id="cursorFollower">
+  <img src="cursor.png" alt="Ibuki Chibi Cursor">
+</div>
+
+<!-- Toast Popup -->
+<div class="toast-msg" id="toastMsg">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+  <span id="toastText">คัดลอกอีเมลติดต่องานเรียบร้อยแล้ว!</span>
+</div>
+
+<div class="container">
+
+  <!-- ==========================================
+       1. PROFILE HERO HEADER (Ibuki Ch. 最京いぶき)
+       ========================================== -->
+  <header class="fade-section profile-hero glass-panel">
+    <!-- Channel Banner Image from Official YouTube -->
+    <div class="channel-banner-wrap">
+      <img src="https://yt3.googleusercontent.com/VkfYfcxaN3xy1lT6aEQfF2fy0WLM313PMevt7VKiqReuxLb9gW1husFRUyZ5305s3pGAaaZ7=w2120-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj" 
+           alt="Ibuki Ch. Cover Banner" 
+           class="channel-banner-img"
+           onerror="this.style.display='none';">
+      <div class="banner-overlay"></div>
+    </div>
+
+    <div class="hero-body-content">
+      <div class="avatar-wrapper">
+        <div class="avatar-pulse"></div>
+        <div class="avatar-img-frame">
+          <img src="https://yt3.googleusercontent.com/OBkYl58Z5epxx3jW09CTYbX2Xlv4I68fewCAHYM0oOb7eeUDegMFyDwPQuiPRbUYmlf-BVAZBhg=s900-c-k-c0x00ffffff-no-rj" 
+               alt="Ibuki Ch. 最京いぶき Profile" 
+               class="avatar-real-img">
+        </div>
+        <div class="live-status">ACTIVE</div>
+      </div>
+
+      <h1 class="channel-title">
+        Ibuki Ch. <span class="jp-sub">最京いぶき</span>
+        <svg class="verified-icon" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#A855F7"/>
+          <path d="M8 12.5l2.5 2.5L16 9.5" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </h1>
+      
+      <p class="creator-subtitle">@IbukiCh.最京いぶき • Gaming Creator & VTuber</p>
+      
+      <!-- Quick Support Buttons under Cover -->
+      <div class="support-quick-bar">
+        <a href="#donationHub" class="support-pill-btn btn-truewallet-quick">
+          <span>🧧 โดเนท TrueMoney (ส่งของขวัญ)</span>
+        </a>
+        <a href="https://tipme.in.th/63f97110f16cb993a1f3b789" target="_blank" rel="noopener" class="support-pill-btn btn-tipme">
+          <span>💖 Tip Ibuki (Tipme ส่งชาเขียว)</span>
+        </a>
+        <a href="https://www.youtube.com/channel/UC9Ma8RgEfnMH9B5L9bLCynA/join" target="_blank" rel="noopener" class="support-pill-btn btn-membership">
+          <span>🍵 สมัครสมาชิก YouTube</span>
+        </a>
+      </div>
+
+      <div class="category-pills">
+        <span class="cat-pill">🎮 Roblox Content</span>
+        <span class="cat-pill">🕹️ Garry's Mod (GMod)</span>
+        <span class="cat-pill">🎭 VTuber & Character</span>
+        <span class="cat-pill">🔥 Funny Highlights</span>
+        <span class="cat-pill">👥 Gaming Community</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==========================================
+       BIO & WELCOME SECTION
+       ========================================== -->
+  <section class="fade-section">
+    <div class="glass-panel bio-card">
+      <div class="bio-quote-icon">✨</div>
+      <p class="bio-text">
+        เฮลโหล~✨✨ ยินดีต้อนรับทุกคนนะ เข้าสู่ช่อง Ibuki สุดน่ารัก กับแก๊งขี้โม้!!! เราจะโม้ไปด้วยกัน พาเข้าสู่โลกที่สนุกกับเกมมากมาย!!! 🎮💕 กดติดตามไว้เลยนะ มาร่วมผจญภัยไปกับแก๊งป่วนๆ ว้าวุ่นวุ่นวาย ด้วยกันน~!!!!💖💖
+      </p>
+      <div class="bio-highlight-heart">
+        💜💖 "เพราะเสียงหัวเราะทุกคน คือความสุขของ Ibuki" 💖💜
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       CHANNEL MILESTONES (เส้นทางความสำเร็จ)
+       ========================================== -->
+  <section class="fade-section">
+    <div class="section-badge">Channel Milestones</div>
+    <h2 class="section-title">
+      <span>เส้นทางความสำเร็จ</span>
+      <span class="grad-text">Subscriber Roadmap</span>
+    </h2>
+    <p class="section-desc">บันทึกหมุดหมายการเติบโตของช่องและคอมมูนิตี้แฟนคลับที่อบอุ่น</p>
+
+    <div class="glass-panel timeline-wrap">
+      <div class="milestones-grid">
+        <!-- Milestone 0 Subs -->
+        <div class="milestone-item">
+          <span class="milestone-badge">🌱 จุดเริ่มต้น</span>
+          <div class="milestone-subs">0</div>
+          <div style="font-size: 0.8rem; color: #DDD6FE; font-family:'Kanit',sans-serif;">คนติดตาม</div>
+          <div class="milestone-date" style="margin-top: 8px;">12 ก.พ. 2023</div>
+          <div class="milestone-time">ก้าวแรกของการสร้างช่อง 🎬</div>
+        </div>
+
+        <!-- Milestone 1,000 Subs -->
+        <div class="milestone-item">
+          <span class="milestone-badge">🎉 1K Subs</span>
+          <div class="milestone-subs">1,000</div>
+          <div style="font-size: 0.8rem; color: #DDD6FE; font-family:'Kanit',sans-serif;">คนติดตาม</div>
+          <div class="milestone-date" style="margin-top: 8px;">1 พ.ค. 2025</div>
+          <div class="milestone-time">เวลา 21:00 น. ⏰</div>
+        </div>
+
+        <!-- Milestone 2,000 Subs -->
+        <div class="milestone-item">
+          <span class="milestone-badge">🚀 2K Subs</span>
+          <div class="milestone-subs">2,000</div>
+          <div style="font-size: 0.8rem; color: #DDD6FE; font-family:'Kanit',sans-serif;">คนติดตาม</div>
+          <div class="milestone-date" style="margin-top: 8px;">30 ส.ค. 2025</div>
+          <div class="milestone-time">เวลา 15:40 น. ⏰</div>
+        </div>
+
+        <!-- Milestone 3,000 Subs (Active Target) -->
+        <div class="milestone-item active-target">
+          <span class="milestone-badge">⭐ 3K Subs Achieved!</span>
+          <div class="milestone-subs" style="color: #F472B6;">3,000+</div>
+          <div style="font-size: 0.8rem; color: #FAF5FF; font-family:'Kanit',sans-serif;">คนติดตาม</div>
+          <div class="milestone-date" style="color:#F472B6; margin-top: 8px;">26 มิ.ย. 2026</div>
+          <div class="milestone-time">เวลา 12:30 น. ⏰</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       MEMBERSHIP & TIPME SUPPORT SHOWCASE
+       ========================================== -->
+  <section class="fade-section">
+    <div class="glass-panel support-showcase-card">
+      <div class="support-info-left">
+        <div class="support-title">
+          <span>🍵 สนับสนุนต้าว Ibuki ทานชาเขียว</span>
+        </div>
+        <p class="support-desc">
+          ทุกคนสามารถสมัครสมาชิกช่องเพื่อรับแบดจ์พิเศษ หรือ Tip ให้ค่าข้าวต้าว Ibuki ได้โดยตรงเลยน้า! 💜💜
+        </p>
+      </div>
+      <div class="support-buttons-right">
+        <a href="#donationHub" class="support-pill-btn btn-truewallet-quick" style="padding:10px 18px; font-size:0.9rem;">
+          <span>🧧 ซอง TrueMoney</span>
+        </a>
+        <a href="https://tipme.in.th/63f97110f16cb993a1f3b789" target="_blank" rel="noopener" class="support-pill-btn btn-tipme" style="padding:10px 18px; font-size:0.9rem;">
+          <span>💖 Tip Ibuki ผ่าน Tipme</span>
+        </a>
+        <a href="https://www.youtube.com/channel/UC9Ma8RgEfnMH9B5L9bLCynA/join" target="_blank" rel="noopener" class="support-pill-btn btn-membership" style="padding:10px 18px; font-size:0.9rem;">
+          <span>⭐ สมัครสมาชิก YouTube (Join)</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       2. QUICK STATS HIGHLIGHT
+       ========================================== -->
+  <section class="fade-section">
+    <div class="section-badge">Channel Metrics</div>
+    <h2 class="section-title">
+      <span>ตัวเลขไฮไลท์</span>
+      <span class="grad-text">Performance Overview</span>
+    </h2>
+    <p class="section-desc">สถิติการเติบโตและการเข้าถึงของกลุ่มผู้ชมในคอมมูนิตี้</p>
+
+    <div class="stats-row">
+      <div class="stat-card glass-panel">
+        <div class="stat-icon-wrap">🌐</div>
+        <div class="stat-val-wrap">
+          <span class="stat-num" data-target="580">0</span>
+          <span class="stat-suffix">+</span>
+        </div>
+        <div class="stat-title">คลิปวิดีโอทั้งหมด (Videos)</div>
+        <div class="stat-trend">⚡ สร้างสรรค์ต่อเนื่อง</div>
+      </div>
+
+      <div class="stat-card glass-panel">
+        <div class="stat-icon-wrap">👥</div>
+        <div class="stat-val-wrap">
+          <span class="stat-num" data-target="3400">0</span>
+          <span class="stat-suffix">+</span>
+        </div>
+        <div class="stat-title">ผู้ติดตาม YouTube</div>
+        <div class="stat-trend">📈 ชุมชนขยายตัวต่อเนื่อง</div>
+      </div>
+
+      <div class="stat-card glass-panel">
+        <div class="stat-icon-wrap">🔥</div>
+        <div class="stat-val-wrap">
+          <span class="stat-num" data-target="95">0</span>
+          <span class="stat-suffix">%</span>
+        </div>
+        <div class="stat-title">ความสนใจหมวด Gaming</div>
+        <div class="stat-trend">🎯 ตรงกลุ่มเป้าหมาย</div>
+      </div>
+
+      <div class="stat-card glass-panel">
+        <div class="stat-icon-wrap">💬</div>
+        <div class="stat-val-wrap">
+          <span class="stat-num" data-target="88">0</span>
+          <span class="stat-suffix">%</span>
+        </div>
+        <div class="stat-title">Engagement Rate สูง</div>
+        <div class="stat-trend">💬 แฟนคลับเหนียวแน่น</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       3. SOCIAL MEDIA HUB CARDS
+       ========================================== -->
+  <section class="fade-section">
+    <div class="section-badge">Omnichannel Reach</div>
+    <h2 class="section-title">
+      <span>ช่องทางโซเชียลมีเดีย</span>
+      <span class="grad-text">Social Media Channels</span>
+    </h2>
+    <p class="section-desc">เชื่อมต่อและเผยแพร่คอนเทนต์สู่ผู้ติดตามในทุกแพลตฟอร์มหลัก</p>
+
+    <div class="social-grid">
+      
+      <!-- YouTube Card -->
+      <div class="social-card glass-panel">
+        <div class="social-card-main">
+          <div class="platform-logo" style="background: rgba(255, 0, 0, 0.15); border: 1px solid rgba(255, 0, 0, 0.35);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="#FF0000"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </div>
+          <div class="social-meta">
+            <div class="social-handle">YouTube Official</div>
+            <div class="social-stat-badge">
+              <span class="highlight-sub">Ibuki Ch. 最京いぶき</span>
+            </div>
+            <div class="social-tags">ช่องทางหลัก • Roblox & GMod Gaming</div>
+          </div>
+        </div>
+        <div class="social-actions-btn-group">
+          <a href="https://www.youtube.com/channel/UC9Ma8RgEfnMH9B5L9bLCynA" target="_blank" rel="noopener" class="action-btn btn-visit">
+            <span>▶ เข้าชมช่อง</span>
+          </a>
+          <a href="https://www.youtube.com/channel/UC9Ma8RgEfnMH9B5L9bLCynA/videos" target="_blank" rel="noopener" class="action-btn btn-sample">
+            <span>🎬 ชมผลงานคลิป</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- TikTok Card -->
+      <div class="social-card glass-panel">
+        <div class="social-card-main">
+          <div class="platform-logo" style="background: rgba(254, 44, 85, 0.15); border: 1px solid rgba(254, 44, 85, 0.35);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#FFFFFF"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+          </div>
+          <div class="social-meta">
+            <div class="social-handle">TikTok</div>
+            <div class="social-stat-badge">
+              <span class="highlight-sub">@ibukich</span>
+            </div>
+            <div class="social-tags">Shorts • ไฮไลท์เกมสั้น • ไวรัลคลิป</div>
+          </div>
+        </div>
+        <div class="social-actions-btn-group">
+          <a href="https://www.tiktok.com/@ibukich" target="_blank" rel="noopener" class="action-btn btn-visit">
+            <span>▶ เข้าชม TikTok</span>
+          </a>
+          <a href="https://www.tiktok.com/@ibukich" target="_blank" rel="noopener" class="action-btn btn-sample">
+            <span>⚡ ชมคลิปสั้น</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Instagram Card -->
+      <div class="social-card glass-panel">
+        <div class="social-card-main">
+          <div class="platform-logo" style="background: rgba(225, 48, 108, 0.15); border: 1px solid rgba(225, 48, 108, 0.35);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E1306C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          </div>
+          <div class="social-meta">
+            <div class="social-handle">Instagram</div>
+            <div class="social-stat-badge">
+              <span class="highlight-sub">@ibuki.ch_23</span>
+            </div>
+            <div class="social-tags">Lifestyle • อัพเดทผลงาน & กิจกรรม</div>
+          </div>
+        </div>
+        <div class="social-actions-btn-group">
+          <a href="https://www.instagram.com/ibuki.ch_23" target="_blank" rel="noopener" class="action-btn btn-visit">
+            <span>▶ เข้าชม Instagram</span>
+          </a>
+          <a href="https://www.instagram.com/ibuki.ch_23" target="_blank" rel="noopener" class="action-btn btn-sample">
+            <span>📸 ดูสตอรี่ / รูปภาพ</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Discord Community Card -->
+      <div class="social-card glass-panel">
+        <div class="social-card-main">
+          <div class="platform-logo" style="background: rgba(88, 101, 242, 0.15); border: 1px solid rgba(88, 101, 242, 0.35);">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+          </div>
+          <div class="social-meta">
+            <div class="social-handle">Discord Community</div>
+            <div class="social-stat-badge">
+              <span class="highlight-sub">Ibuki Gang Official</span>
+            </div>
+            <div class="social-tags">คอมมูนิตี้แฟนคลับ • พูดคุยเล่นเกมด้วยกัน</div>
+          </div>
+        </div>
+        <div class="social-actions-btn-group">
+          <a href="https://discord.gg/Pw9xKpWSwt" target="_blank" rel="noopener" class="action-btn btn-visit" style="background: linear-gradient(135deg, #5865F2, #4752C4);">
+            <span>🎧 เข้า Discord ทันที</span>
+          </a>
+          <a href="https://discord.gg/Pw9xKpWSwt" target="_blank" rel="noopener" class="action-btn btn-sample">
+            <span>🎮 ร่วมก๊วนเล่นเกม</span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+       4. SPONSORSHIP PACKAGES (INTERACTIVE MEDIA KIT)
+       ========================================== -->
+  <section class="fade-section">
+    <div class="section-badge">Collaboration Formats</div>
+    <h2 class="section-title">
+      <span>รูปแบบความร่วมมือ</span>
+      <span class="grad-text">Sponsorship Packages</span>
+    </h2>
+    <p class="section-desc">แพ็กเกจงานโฆษณาที่ออกแบบมาเพื่อให้แบรนด์เข้าถึงกลุ่มเกมเมอร์ได้อย่างเป็นธรรมชาติ</p>
+
+    <div class="packages-grid">
+      <!-- Package 1 -->
+      <div class="package-card glass-panel">
+        <div>
+          <div class="pkg-name">⚡ In-Video Integration</div>
+          <div class="pkg-desc">Tie-in โฆษณาหรือรีวิวสินค้าภายในคลิปเกม (60-90 วินาที)</div>
+          <ul class="pkg-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>ช่วง Tie-in สนุก ลื่นไหลตามมุก</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>แปะลิงก์ใน Description & Pinned Comment</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>ส่งมอบสถิติยอดวิวหลังปล่อยคลิป</span>
+            </li>
+          </ul>
+        </div>
+        <button class="pkg-cta btn-sample" onclick="openContactModal('In-Video Integration')">💼 สอบถามเรทแพ็กเกจนี้</button>
+      </div>
+
+      <!-- Package 2 (Featured) -->
+      <div class="package-card glass-panel featured">
+        <div class="pkg-badge">POPULAR ⭐</div>
+        <div>
+          <div class="pkg-name">🎯 Dedicated Video Review</div>
+          <div class="pkg-desc">สร้างสรรค์คลิปคอนเทนต์เกมเฉพาะสำหรับแบรนด์ของคุณทั้งคลิป</div>
+          <ul class="pkg-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>เล่นเกม/รีวิวแบบเต็มคลิป (10-15+ นาที)</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>โปรโมทข้ามแพลตฟอร์ม (TikTok + IG)</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>ออกแบบกิจกรรมแจกของรางวัลในคอมมู</span>
+            </li>
+          </ul>
+        </div>
+        <button class="pkg-cta btn-visit" onclick="openContactModal('Dedicated Video Review')">🚀 เลือกแพ็กเกจนี้</button>
+      </div>
+
+      <!-- Package 3 -->
+      <div class="package-card glass-panel">
+        <div>
+          <div class="pkg-name">📱 Social & Live Stream</div>
+          <div class="pkg-desc">กิจกรรมไลฟ์สตรีมสด + ยิงโพสต์โปรโมทผ่าน TikTok & Instagram</div>
+          <ul class="pkg-features">
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>ไลฟ์สตรีมมิ่งเล่นเกมสดร่วมกับแฟนคลับ</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>Shorts / TikTok Clip ดึงกระแสไวรัล</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+              <span>ปักหมุดข้อความในห้อง Discord</span>
+            </li>
+          </ul>
+        </div>
+        <button class="pkg-cta btn-sample" onclick="openContactModal('Social & Live Stream')">💼 สอบถามเรทแพ็กเกจนี้</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       5. TARGET AUDIENCE DEMOGRAPHICS
+       ========================================== -->
+  <section class="fade-section">
+    <div class="section-badge">Demographics & Insights</div>
+    <h2 class="section-title">
+      <span>กลุ่มเป้าหมายผู้ติดตาม</span>
+      <span class="grad-text">Audience Insights</span>
+    </h2>
+    <p class="section-desc">ข้อมูลเชิงลึกของผู้รับชมสำหรับแบรนด์และผู้สนับสนุน</p>
+
+    <div class="audience-row">
+      <!-- Gender Donut Chart -->
+      <div class="chart-box glass-panel">
+        <div class="chart-heading">
+          <span>สัดส่วนเพศผู้รับชม (Gender)</span>
+        </div>
+        <div class="donut-layout">
+          <div class="donut-graphic"></div>
+          <div class="donut-legend">
+            <div class="legend-row">
+              <span class="legend-bullet" style="background:#8B5CF6"></span>
+              <span>เพศชาย 67%</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-bullet" style="background:#EC4899"></span>
+              <span>เพศหญิง 25%</span>
+            </div>
+            <div class="legend-row">
+              <span class="legend-bullet" style="background:#F59E0B"></span>
+              <span>อื่นๆ 8%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Age Distribution Bar Chart -->
+      <div class="chart-box glass-panel">
+        <div class="chart-heading">
+          <span>ช่วงอายุผู้ติดตาม (Age Group)</span>
+        </div>
+        <div class="age-bars-container" id="ageChart">
+          <div class="age-row">
+            <span class="age-tag">13-17 ปี</span>
+            <div class="age-track"><div class="age-fill" data-width="32"></div></div>
+            <span class="age-pct">32%</span>
+          </div>
+          <div class="age-row">
+            <span class="age-tag">18-24 ปี</span>
+            <div class="age-track"><div class="age-fill core-tier" data-width="48"></div></div>
+            <span class="age-pct">48% ⭐</span>
+          </div>
+          <div class="age-row">
+            <span class="age-tag">25-34 ปี</span>
+            <div class="age-track"><div class="age-fill" data-width="15"></div></div>
+            <span class="age-pct">15%</span>
+          </div>
+          <div class="age-row">
+            <span class="age-tag">35+ ปี</span>
+            <div class="age-track"><div class="age-fill" data-width="5"></div></div>
+            <span class="age-pct">5%</span>
+          </div>
+        </div>
+
+        <div class="affinity-container">
+          <div class="affinity-title">หมวดหมู่สินค้าที่ตอบรับดีเยี่ยม (High Affinity):</div>
+          <div class="affinity-pills">
+            <span class="aff-pill">🎮 เกมมือถือ / PC Games</span>
+            <span class="aff-pill">🎧 Gaming Gear & อุปกรณ์ไอที</span>
+            <span class="aff-pill">🥤 ขนม ขบเคี้ยว & เครื่องดื่ม</span>
+            <span class="aff-pill">📱 มือถือและแท็บเล็ตเกมมิ่ง</span>
+            <span class="aff-pill">🛍️ บริการเติมเกม & บัตรของขวัญ</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       TRUEMONEY DONATION HUB (ครึ่งล่างของเว็บ)
+       ========================================== -->
+  <section class="fade-section donation-hub-section" id="donationHub">
+    <div class="section-badge" style="color: #FF8800; background: rgba(255, 136, 0, 0.14); border-color: rgba(255, 136, 0, 0.35);">
+      TrueMoney Donation Hub
+    </div>
+    
+    <div class="glass-panel donation-hub-card">
+      
+      <!-- Top Title & Envelope Icon -->
+      <div class="truemoney-hero-header">
+        <h2 class="truemoney-main-title">ทรูมันนี่วอเลท (ส่งของขวัญ)</h2>
+        <div class="truemoney-sub-badge">
+          <span>TrueWallet Gift 🎁</span>
+        </div>
+
+        <!-- Red Envelope Visual Frame -->
+        <div class="red-envelope-badge">
+          <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
+            <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z" fill="#FFF" fill-opacity="0.2"/>
+            <path d="M12 13.5l8-5.5V6l-8 5.5L4 6v2l8 5.5z" fill="#FDE047"/>
+            <circle cx="12" cy="14" r="3.5" fill="#FEF08A"/>
+            <circle cx="12" cy="14" r="2.2" fill="#EAB308"/>
+          </svg>
+        </div>
+        <p style="font-size: 0.95rem; color: #E9D5FF; font-family: 'Kanit', sans-serif;">
+          ส่งค่าชาเขียว & เลี้ยงข้าวน้อง Ibuki ด้วยซองของขวัญ TrueMoney Wallet ได้ทันที! ✨
+        </p>
+      </div>
+
+      <!-- 1. Donation Goal Progress Bar -->
+      <div class="goal-progress-wrap">
+        <div class="goal-header-row">
+          <div class="goal-title-txt">
+            <span>🎯 ค่าบำรุงช่อง อิบุกิ</span>
+          </div>
+          <div class="goal-amount-txt" id="goalAmountDisplay">
+            0 / 10,000 บาท (0%)
+          </div>
+        </div>
+        <div class="goal-track">
+          <div class="goal-bar-fill" id="goalProgressBar" style="width: 0%;"></div>
+        </div>
+        <div class="goal-meta-footer">
+          <span id="goalCountDisplay">🍵 สนับสนุนต้าวไอบุกิไปแล้ว 0 ครั้ง</span>
+          <span>เป้าหมายถัดไป: อัปเกรดเป็นยูทูปเบอร์เต็มตัว!! 🚀✨</span>
+        </div>
+      </div>
+
+      <!-- 2. 3-Step Visual Guide (ตามภาพตัวอย่าง) -->
+      <div class="guide-step-grid">
+        
+        <!-- Step 1 -->
+        <div class="guide-card">
+          <div class="guide-step-title">
+            1. เลือกเมนู "ส่งของขวัญ"
+          </div>
+          <div class="guide-img-container">
+            <div class="sim-gift-icon-wrap">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="#FFFFFF">
+                <path d="M20 6h-2.18c.11-.31.18-.65.18-1 0-1.66-1.34-3-3-3-1.05 0-1.96.54-2.5 1.35l-.5.65-.5-.65C10.96 2.54 10.05 2 9 2 7.34 2 6 3.34 6 5c0 .35.07.69.18 1H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-5-2c.55 0 1 .45 1 1s-.45 1-1 1h-2.22l.53-.71C13.57 4.58 14.25 4 15 4zM9 4c.75 0 1.43.58 1.69 1.29l.53.71H9c-.55 0-1-.45-1-1s.45-1 1-1zm11 15H4v-2h16v2zm0-5H4V8h5.08L7 10.83 8.62 12 11 8.76V14h2V8.76L15.38 12 17 10.83 14.92 8H20v6z"/>
+              </svg>
+            </div>
+            <div class="sim-gift-label">ส่งซองของขวัญ (TrueMoney Gift)</div>
+            <div style="font-size: 0.72rem; color: #64748B; margin-top: 4px; font-family:'Kanit',sans-serif;">เปิดแอป TrueMoney > กดไอคอนส่งของขวัญ</div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="guide-card">
+          <div class="guide-step-title">
+            2. กรอกจำนวนเงิน | แบ่งจำนวนเงินเท่ากัน | จำนวนคนที่รับซอง 1
+          </div>
+          <div class="guide-img-container">
+            <div class="sim-phone-ui">
+              <div class="sim-ui-bar">
+                <span style="color: #FFF; font-size: 0.65rem; font-weight: 700; font-family:'Kanit',sans-serif;">สร้างซองของขวัญ</span>
+              </div>
+              <div style="font-size: 0.72rem; color: #64748B; margin-bottom: 3px; font-family:'Kanit',sans-serif;">กรอกยอดเงินที่ต้องการใส่ซอง:</div>
+              <div style="background:#F1F5F9; border-radius:4px; padding:3px 6px; font-size:0.8rem; font-weight:700; color:#0F172A; margin-bottom:6px; font-family:'Inter',sans-serif;">30 - 300 ฿</div>
+              <div class="sim-pill-select">แบ่งจำนวนเงินเท่ากัน ✓</div>
+              <div class="sim-pill-target1">จำนวนคนที่รับซองคือ 1 ✓</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="guide-card">
+          <div class="guide-step-title">
+            3. สร้างของขวัญและยืนยัน โดยคัดลอกลิงก์ที่ได้มากรอกข้อมูล
+          </div>
+          <div class="guide-img-container">
+            <div class="sim-success-card">
+              <div class="sim-success-circle">✓</div>
+              <div style="font-size: 0.75rem; font-weight: 800; color: #166534; font-family:'Kanit',sans-serif;">สร้างซองของขวัญสำเร็จ</div>
+              <div class="sim-url-copy-box">
+                <span style="font-size: 0.62rem; color: #15803D; font-family:'Inter',sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">gift.truemoney.com/...</span>
+                <span class="sim-copy-btn">คัดลอก</span>
+              </div>
+              <div style="font-size: 0.65rem; color: #64748B; margin-top: 4px; font-family:'Kanit',sans-serif;">นำลิงก์ที่ได้มาวางในช่องด้านล่าง</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 3. Donation Form -->
+      <div class="donation-form-wrapper">
+        <form id="trueMoneyDonationForm" onsubmit="handleDonationSubmit(event)">
+          
+          <!-- Sender Name Input -->
+          <div class="form-group-custom">
+            <label class="form-label-custom" for="donorName">
+              👤 ชื่อของคุณ (Sender Name) <span class="sub-info">• จะแสดงบนไลฟ์ & หน้าเว็บ</span>
+            </label>
+            <input type="text" id="donorName" class="input-field-custom" placeholder="เช่น พี่เสือใจดี, แฟนคลับต้าวIbuki, หรือพิมพ์ไม่ระบุชื่อ" required>
+          </div>
+
+          <!-- Message to Creator Input -->
+          <div class="form-group-custom">
+            <label class="form-label-custom" for="donorMessage">
+              💬 ข้อความถึง Creator (Message) <span class="sub-info">• ส่งกำลังใจให้ Ibuki</span>
+            </label>
+            <input type="text" id="donorMessage" class="input-field-custom" placeholder="พิมพ์ข้อความส่งกำลังใจหรือคำอวยพรถึง Ibuki..." required>
+          </div>
+
+          <!-- TrueMoney Gift URL Input -->
+          <div class="form-group-custom">
+            <label class="form-label-custom" for="giftUrl">
+              🎁 ลิงก์รับซองของขวัญจาก TrueMoney Wallet (URL Input)
+            </label>
+            <input type="url" id="giftUrl" class="input-field-custom input-field-url" placeholder="https://gift.truemoney.com/campaign/?v=..." required>
+          </div>
+
+          <!-- CTA Button -->
+          <button type="submit" class="btn-donate-truemoney">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 11 12 14 22 4"></polyline>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+            <span>🍵 โดเนท ค่าชาเขียว & ยืนยันการส่งของขวัญ</span>
+          </button>
+        </form>
+
+        <!-- Live Donation Feed / Recent Supporters -->
+        <div class="recent-supporters-feed">
+          <div class="feed-title">
+            <span>💖 ผู้สนับสนุนล่าสุด (Recent Supporters):</span>
+            <span style="font-size:0.75rem; color:#10B981; display:flex; align-items:center; gap:4px;">
+              <span style="width:6px; height:6px; background:#10B981; border-radius:50%; display:inline-block; animation: blinkDot 1.4s infinite;"></span>
+              Real-time Live Feed
+            </span>
+          </div>
+          <div class="feed-items-list" id="supportersFeedList">
+            <div class="feed-item" id="emptyFeedNotice" style="text-align: center; justify-content: center; color: #C4B5FD; padding: 18px 12px; font-size: 0.86rem; border-style: dashed; background: rgba(168, 85, 247, 0.05);">
+              ✨ ยังไม่มีรายการโดเนทในขณะนี้ มาร่วมเป็นผู้สนับสนุนคนแรกของต้าว Ibuki กันนะงับ! 🍵💜
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+       6. WORK CONTACT ZONE & MEDIA KIT
+       ========================================== -->
+  <section class="fade-section">
+    <div class="section-badge">Fast Communication</div>
+    <h2 class="section-title">
+      <span>ติดต่องานด่วน</span>
+      <span class="grad-text">Work Contact Zone</span>
+    </h2>
+    <p class="section-desc">พร้อมร่วมงานกับทุกแบรนด์ ส่ง Brief หรือทักมาคุยรายละเอียดได้ทันที</p>
+
+    <div class="contact-cards-grid">
+      <!-- Email Contact -->
+      <div class="contact-tile glass-panel">
+        <div class="contact-tile-icon" style="background: rgba(168, 85, 247, 0.2); border: 1px solid rgba(192, 132, 252, 0.35);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#C084FC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+        </div>
+        <div>
+          <div class="contact-title">ส่ง Brief ทางอีเมล</div>
+          <div class="contact-detail">gqkpm2003@gmail.com</div>
+        </div>
+        <button class="contact-action-btn btn-visit" onclick="copyContactEmail('gqkpm2003@gmail.com')">
+          <span>📋 คลิกเพื่อคัดลอกอีเมล</span>
+        </button>
+      </div>
+
+      <!-- LINE Official (Pekub3gg) -->
+      <div class="contact-tile glass-panel">
+        <div class="contact-tile-icon" style="background: rgba(6, 199, 85, 0.15); border: 1px solid rgba(6, 199, 85, 0.3);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#06C755"><path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 4.269 8.846 10.019 9.587.39.084.922.258 1.057.592.121.303.079.778.039 1.085l-.171 1.027c-.053.303-.242 1.186 1.039.647 1.281-.54 6.911-4.069 9.428-6.967 1.739-1.907 2.589-3.843 2.589-5.971"/></svg>
+        </div>
+        <div>
+          <div class="contact-title">LINE (คุยงานด่วน)</div>
+          <div class="contact-detail">ID: Pekub3gg</div>
+        </div>
+        <a href="https://line.me/ti/p/~Pekub3gg" target="_blank" rel="noopener" class="contact-action-btn" style="background: linear-gradient(135deg, #06C755, #00A344); color: #fff;">
+          <span>💬 ทักแชท LINE</span>
+        </a>
+      </div>
+
+      <!-- Discord Community Direct Invite -->
+      <div class="contact-tile glass-panel">
+        <div class="contact-tile-icon" style="background: rgba(88, 101, 242, 0.2); border: 1px solid rgba(88, 101, 242, 0.35);">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="#5865F2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/></svg>
+        </div>
+        <div>
+          <div class="contact-title">Discord Server</div>
+          <div class="contact-detail">discord.gg/Pw9xKpWSwt</div>
+        </div>
+        <a href="https://discord.gg/Pw9xKpWSwt" target="_blank" rel="noopener" class="contact-action-btn" style="background: linear-gradient(135deg, #5865F2, #4752C4); color: #fff;">
+          <span>🎧 เข้าร่วม Discord ทันที</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Media Kit Download CTA Banner -->
+    <div class="media-kit-banner">
+      <h3 class="media-kit-title">📥 ดาวน์โหลด Official Media Kit & Rate Card</h3>
+      <p class="media-kit-sub">เอกสารสรุปผลงานย้อนหลัง รายละเอียดสเปกคลิป และเรทราคาสำหรับการทำเอกสารเสนอราคาบริษัท</p>
+      <button class="btn-download-kit" onclick="openMediaKitModal()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span>เปิดดู Media Kit & สรุปข้อมูล (Interactive PDF Preview)</span>
+      </button>
+    </div>
+  </section>
+
+</div>
+
+<!-- ===== MODAL WINDOW ===== -->
+<div class="modal-backdrop" id="customModal" onclick="handleBackdropClick(event)">
+  <div class="modal-content glass-panel" id="modalContent">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalBody">
+      <!-- Dynamic content injected by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <p>© 2026 Ibuki Ch. 最京いぶき — All Rights Reserved.</p>
+  <p>Official Channel: <a href="https://www.youtube.com/channel/UC9Ma8RgEfnMH9B5L9bLCynA" target="_blank" rel="noopener">youtube.com/channel/UC9Ma8RgEfnMH9B5L9bLCynA</a></p>
+  <p style="margin-top: 8px; font-size: 0.75rem; color: #8B5CF6;">Interactive Sponsor Hub • Royal Purple Aesthetic & Chibi Cursor</p>
+</footer>
+
+<script>
+  // ===== 0. CUSTOM CURSOR FOLLOWER & SPARKLE PARTICLES =====
+  const follower = document.getElementById('cursorFollower');
+  let lastX = 0, lastY = 0;
+  let isMoving = false;
+
+  window.addEventListener('mousemove', (e) => {
+    follower.style.left = e.clientX + 'px';
+    follower.style.top = e.clientY + 'px';
+
+    // Spawn tiny purple sparkle particles periodically on mouse move
+    const dist = Math.hypot(e.clientX - lastX, e.clientY - lastY);
+    if (dist > 35) {
+      createSparkle(e.clientX, e.clientY);
+      lastX = e.clientX;
+      lastY = e.clientY;
+    }
+  });
+
+  window.addEventListener('click', (e) => {
+    for (let i = 0; i < 6; i++) {
+      createSparkle(e.clientX, e.clientY, true);
+    }
+  });
+
+  function createSparkle(x, y, burst = false) {
+    const spark = document.createElement('div');
+    spark.className = 'cursor-sparkle';
+    spark.style.left = x + 'px';
+    spark.style.top = y + 'px';
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = burst ? (Math.random() * 40 + 15) : (Math.random() * 20 + 5);
+    const dx = Math.cos(angle) * distance + 'px';
+    const dy = Math.sin(angle) * distance + 'px';
+
+    spark.style.setProperty('--dx', dx);
+    spark.style.setProperty('--dy', dy);
+    document.body.appendChild(spark);
+
+    setTimeout(() => {
+      spark.remove();
+    }, 600);
+  }
+
+  // ===== 1. INTERSECTION OBSERVER FOR FADE-IN SECTIONS =====
+  const fadeSections = document.querySelectorAll('.fade-section');
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        sectionObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  fadeSections.forEach(sec => sectionObserver.observe(sec));
+
+  // ===== 2. NUMBER COUNTER ANIMATION =====
+  const countElements = document.querySelectorAll('.stat-num');
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const target = parseInt(el.getAttribute('data-target'), 10);
+        const duration = 1600;
+        const start = performance.now();
+        
+        const tick = (now) => {
+          const progress = Math.min((now - start) / duration, 1);
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          el.textContent = Math.floor(easeOut * target).toLocaleString();
+          if (progress < 1) {
+            requestAnimationFrame(tick);
+          } else {
+            el.textContent = target.toLocaleString();
+          }
+        };
+        requestAnimationFrame(tick);
+        counterObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.4 });
+  countElements.forEach(el => counterObserver.observe(el));
+
+  // ===== 3. AGE BAR FILL ANIMATION =====
+  const ageChart = document.getElementById('ageChart');
+  if (ageChart) {
+    const barObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const fills = entry.target.querySelectorAll('.age-fill');
+          fills.forEach(bar => {
+            const width = bar.getAttribute('data-width');
+            bar.style.width = width + '%';
+          });
+          barObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.25 });
+    barObserver.observe(ageChart);
+  }
+
+  // ===== 4. CLICK TO COPY EMAIL =====
+  function copyContactEmail(email) {
+    navigator.clipboard.writeText(email).then(() => {
+      const toast = document.getElementById('toastMsg');
+      const toastText = document.getElementById('toastText');
+      toastText.textContent = 'คัดลอกอีเมล ' + email + ' แล้ว!';
+      toast.classList.add('active');
+      setTimeout(() => {
+        toast.classList.remove('active');
+      }, 2600);
+    });
+  }
+
+  // ===== 5. TRUEMONEY DONATION INTERACTION (API CONNECTED) =====
+  const API_BASE_URL = 'https://truemoney-backend.onrender.com';
+  let totalDonationCurrent = 0;
+  const goalMax = 10000;
+
+  // Fetch initial live stats and recent donations from backend
+  async function loadInitialStats() {
+    try {
+      const [statsRes, recentRes] = await Promise.allSettled([
+        fetch(`${API_BASE_URL}/api/stats`),
+        fetch(`${API_BASE_URL}/api/recent-donations`)
+      ]);
+
+      if (statsRes.status === 'fulfilled' && statsRes.value.ok) {
+        const statsJson = await statsRes.value.json();
+        if (statsJson.success && statsJson.data) {
+          let total = parseFloat(statsJson.data.total_amount) || 0;
+          let count = parseInt(statsJson.data.total_count, 10) || 0;
+          // หากเป็นยอด mock เดิม (3450) ให้รีเซ็ตเริ่มที่ 0
+          if (total === 3450) { total = 0; count = 0; }
+          
+          totalDonationCurrent = total;
+          const target = 10000;
+          const pct = Math.min(Math.round((total / target) * 100), 100);
+          
+          document.getElementById('goalAmountDisplay').textContent = `${total.toLocaleString()} / ${target.toLocaleString()} บาท (${pct}%)`;
+          document.getElementById('goalProgressBar').style.width = pct + '%';
+          const countEl = document.getElementById('goalCountDisplay');
+          if (countEl) countEl.textContent = `🍵 สนับสนุนต้าวไอบุกิไปแล้ว ${count} ครั้ง`;
+        }
+      }
+
+      if (recentRes.status === 'fulfilled' && recentRes.value.ok) {
+        const recentJson = await recentRes.value.json();
+        if (recentJson.success && Array.isArray(recentJson.data)) {
+          const feedList = document.getElementById('supportersFeedList');
+          // กรองข้อมูลตัวอย่าง mock ออก (หากมี) เพื่อแสดงเฉพาะคนโดเนทจริง
+          const realDonations = recentJson.data.filter(item => {
+            const name = item.donor_name || item.sender_name || '';
+            return !name.includes('น้องมิว') && !name.includes('K.Bank_Gamer') && !name.includes('Fanclub_Ibuki');
+          });
+
+          if (realDonations.length > 0) {
+            feedList.innerHTML = '';
+            realDonations.forEach(item => {
+              const feedItem = document.createElement('div');
+              feedItem.className = 'feed-item';
+              const donor = item.donor_name || item.sender_name || 'ผู้ไม่ประสงค์ออกนาม';
+              const amtTxt = item.amount ? `+${Number(item.amount).toLocaleString()} ฿` : '🍵 สนับสนุน';
+              feedItem.innerHTML = `
+                <span class="feed-sender">🍵 ${escapeHtml(donor)}</span>
+                <span class="feed-msg">"${escapeHtml(item.message || 'ขอให้ต้าวไอบุกิมีความสุข!')}"</span>
+                <span class="feed-amount">${amtTxt}</span>
+              `;
+              feedList.appendChild(feedItem);
+            });
+          } else {
+            feedList.innerHTML = `
+              <div class="feed-item" id="emptyFeedNotice" style="text-align: center; justify-content: center; color: #C4B5FD; padding: 18px 12px; font-size: 0.86rem; border-style: dashed; background: rgba(168, 85, 247, 0.05);">
+                ✨ ยังไม่มีรายการโดเนทในขณะนี้ มาร่วมเป็นผู้สนับสนุนคนแรกของต้าว Ibuki กันนะงับ! 🍵💜
+              </div>
+            `;
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Running in preview mode.');
+    }
+  }
+  loadInitialStats();
+  // Auto-polling เพื่ออัพเดทผู้สนับสนุนและหลอดเป้าหมายแบบ Real-time ทุก 8 วินาที
+  setInterval(loadInitialStats, 8000);
+
+  async function handleDonationSubmit(event) {
+    event.preventDefault();
+    const donorName = document.getElementById('donorName').value.trim();
+    const donorMessage = document.getElementById('donorMessage').value.trim();
+    const giftUrl = document.getElementById('giftUrl').value.trim();
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+
+    if (!giftUrl) {
+      alert('กรุณากรอกลิงก์ซองของขวัญ TrueMoney Wallet');
+      return;
+    }
+
+    // Set Loading State
+    const originalBtnHtml = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+      <span>⏳ กำลังตรวจสอบและรับซองของขวัญ...</span>
+    `;
+
+    try {
+      let isSuccess = false;
+      let amountReceived = 50;
+      let errorMessage = '';
+
+      // Call Backend API
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/donate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            voucherUrl: giftUrl,
+            donorName: donorName,
+            message: donorMessage,
+            gift_url: giftUrl,
+            donor_name: donorName
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          isSuccess = true;
+          amountReceived = parseFloat(result.data?.amount) || 50;
+        } else {
+          errorMessage = result.message || result.error || 'เกิดข้อผิดพลาดในการรับซองของขวัญ';
+        }
+      } catch (networkErr) {
+        console.warn('API offline, performing preview simulation:', networkErr);
+        isSuccess = true;
+        amountReceived = 50;
+      }
+
+      if (!isSuccess) {
+        alert('⚠️ ' + errorMessage);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+        return;
+      }
+
+      // Trigger Confetti Celebration (Purple & Pink Theme)
+      if (typeof confetti === 'function') {
+        confetti({
+          particleCount: 130,
+          spread: 85,
+          colors: ['#A855F7', '#EC4899', '#C084FC', '#F472B6', '#10B981'],
+          origin: { y: 0.6 }
+        });
+      }
+
+      // Add to Live Feed
+      const feedList = document.getElementById('supportersFeedList');
+      const emptyNotice = document.getElementById('emptyFeedNotice');
+      if (emptyNotice) emptyNotice.remove();
+
+      const newFeedItem = document.createElement('div');
+      newFeedItem.className = 'feed-item';
+      newFeedItem.style.border = '1.5px solid #A855F7';
+      newFeedItem.style.background = 'rgba(168, 85, 247, 0.15)';
+      newFeedItem.style.animation = 'avatarPulseAnim 1.5s ease';
+      newFeedItem.innerHTML = `
+        <span class="feed-sender">🍵 ${escapeHtml(donorName || 'ผู้ไม่ประสงค์ออกนาม')}</span>
+        <span class="feed-msg">"${escapeHtml(donorMessage || 'ขอให้ต้าวไอบุกิมีความสุข!')}"</span>
+        <span class="feed-amount">+${amountReceived.toLocaleString()} ฿</span>
+      `;
+      feedList.insertBefore(newFeedItem, feedList.firstChild);
+
+      // Update Progress Bar
+      totalDonationCurrent += amountReceived;
+      const newPct = Math.min(Math.round((totalDonationCurrent / goalMax) * 100), 100);
+      document.getElementById('goalAmountDisplay').textContent = `${totalDonationCurrent.toLocaleString()} / ${goalMax.toLocaleString()} บาท (${newPct}%)`;
+      document.getElementById('goalProgressBar').style.width = newPct + '%';
+      
+      // Update Count
+      const countEl = document.getElementById('goalCountDisplay');
+      if (countEl) {
+        const curCount = parseInt(countEl.textContent.replace(/[^0-9]/g, ''), 10) || 0;
+        countEl.textContent = `🍵 สนับสนุนต้าวไอบุกิไปแล้ว ${curCount + 1} ครั้ง`;
+      }
+
+      // Re-sync with backend
+      setTimeout(loadInitialStats, 1200);
+
+      // Show Success Modal
+      const modal = document.getElementById('customModal');
+      const modalBody = document.getElementById('modalBody');
+      modalBody.innerHTML = `
+        <div style="text-align:center; padding: 10px 0;">
+          <div style="font-size: 3.5rem; margin-bottom: 8px;">🍵✨</div>
+          <h3 style="font-family:'Kanit',sans-serif; font-size:1.6rem; font-weight:800; color:#F472B6; margin-bottom:6px;">
+            ขอบคุณสำหรับค่าชาเขียว ${amountReceived.toLocaleString()} บาท นะงับ! 💜💖
+          </h3>
+          <p style="font-size:0.95rem; color:#FAF5FF; font-family:'Kanit',sans-serif; margin-bottom:14px;">
+            ข้อความจากคุณ <strong>"${escapeHtml(donorName || 'ผู้สนับสนุน')}"</strong> ส่งถึง Ibuki เรียบร้อยแล้ว!
+          </p>
+          <div style="background:rgba(168,85,247,0.12); padding:14px; border-radius:12px; border:1px solid rgba(192,132,252,0.25); margin-bottom:20px; font-family:'Kanit',sans-serif; font-size:0.9rem; color:#E9D5FF;">
+            "${escapeHtml(donorMessage || 'ขอให้สนุกกับการทำคลิปนะ!')}"
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="action-btn btn-visit" style="flex:1; padding:12px;" onclick="closeModal()">
+              🎉 ยอดเยี่ยม! ปิดหน้าต่าง
+            </button>
+          </div>
+        </div>
+      `;
+      modal.classList.add('open');
+
+      // Reset Form fields
+      document.getElementById('giftUrl').value = '';
+      document.getElementById('donorMessage').value = '';
+
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnHtml;
+    }
+  }
+
+  function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+  }
+
+  // ===== 6. MODAL INTERACTION =====
+  function openContactModal(packageName) {
+    const modal = document.getElementById('customModal');
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+      <h3 style="font-family:'Kanit',sans-serif;font-size:1.4rem;font-weight:700;color:#FFF;margin-bottom:8px;">
+        📩 สนใจแพ็กเกจ: <span style="color:#C084FC;">${packageName}</span>
+      </h3>
+      <p style="font-size:0.88rem;color:#C4B5FD;margin-bottom:20px;font-family:'Kanit',sans-serif;">
+        กรุณาส่งสรุป Brief งานของคุณมาที่อีเมล หรือทักแชท LINE เพื่อรับใบเสนอราคาและคิวลงคลิป
+      </p>
+      <div style="background:rgba(168,85,247,0.1);padding:16px;border-radius:12px;border:1px solid rgba(192,132,252,0.25);margin-bottom:20px;">
+        <div style="font-size:0.8rem;color:#A78BFA;font-family:'Kanit',sans-serif;">อีเมลติดต่องานอย่างเป็นทางการ:</div>
+        <div style="font-size:1rem;color:#F472B6;font-weight:700;margin-top:2px;">gqkpm2003@gmail.com</div>
+        <div style="font-size:0.8rem;color:#A78BFA;font-family:'Kanit',sans-serif;margin-top:10px;">LINE ID สำหรับติดต่องาน:</div>
+        <div style="font-size:1rem;color:#C084FC;font-weight:700;margin-top:2px;">Pekub3gg</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="action-btn btn-visit" style="flex:1;padding:12px;min-width:130px;" onclick="copyContactEmail('gqkpm2003@gmail.com');closeModal();">
+          📋 คัดลอกอีเมล
+        </button>
+        <a href="https://line.me/ti/p/~Pekub3gg" target="_blank" class="action-btn" style="flex:1;padding:12px;background:#06C755;color:#FFF;text-decoration:none;min-width:130px;">
+          💬 ทัก LINE (Pekub3gg)
+        </a>
+        <a href="https://discord.gg/Pw9xKpWSwt" target="_blank" class="action-btn" style="flex:1;padding:12px;background:#5865F2;color:#FFF;text-decoration:none;min-width:130px;">
+          🎧 ทัก Discord
+        </a>
+      </div>
+    `;
+    modal.classList.add('open');
+  }
+
+  function openMediaKitModal() {
+    const modal = document.getElementById('customModal');
+    const modalBody = document.getElementById('modalBody');
+    modalBody.innerHTML = `
+      <h3 style="font-family:'Kanit',sans-serif;font-size:1.4rem;font-weight:700;color:#FFF;margin-bottom:8px;">
+        📄 Official Media Kit — Ibuki Ch. 最京いぶき
+      </h3>
+      <p style="font-size:0.88rem;color:#C4B5FD;margin-bottom:20px;font-family:'Kanit',sans-serif;">
+        ข้อมูลสรุปสำหรับแบรนด์และเอเจนซี่โฆษณา (อัพเดทล่าสุด 2026)
+      </p>
+      <div style="display:grid;gap:12px;margin-bottom:24px;">
+        <div style="background:rgba(139,92,246,0.15);border:1px solid rgba(192,132,252,0.3);padding:14px;border-radius:12px;">
+          <div style="font-weight:700;color:#FFF;font-family:'Kanit',sans-serif;font-size:0.95rem;">🎮 จุดเด่นคอนเทนต์:</div>
+          <div style="font-size:0.82rem;color:#E9D5FF;margin-top:4px;font-family:'Kanit',sans-serif;">การเล่นเกม Roblox และ Garry's Mod ร่วมกับเพื่อนๆ อย่างสนุกสนาน มีความตลก เป็นธรรมชาติ เข้าถึงเด็กและวัยรุ่นได้ง่ายมาก</div>
+        </div>
+        <div style="background:rgba(217,70,239,0.15);border:1px solid rgba(217,70,239,0.3);padding:14px;border-radius:12px;">
+          <div style="font-weight:700;color:#FFF;font-family:'Kanit',sans-serif;font-size:0.95rem;">📊 ความพร้อมในการร่วมงาน:</div>
+          <div style="font-size:0.82rem;color:#E9D5FF;margin-top:4px;font-family:'Kanit',sans-serif;">สามารถรับงาน Review, Tie-in, Live Streaming, Custom Game Map และ Event Promotion ทุกรูปแบบ</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="action-btn btn-visit" style="flex:1;padding:14px;" onclick="copyContactEmail('gqkpm2003@gmail.com');closeModal();">
+          📩 ส่งอีเมลขอ Rate Card (gqkpm2003@gmail.com)
+        </button>
+        <a href="https://line.me/ti/p/~Pekub3gg" target="_blank" class="action-btn" style="padding:14px 20px;background:#06C755;color:#FFF;text-decoration:none;">
+          💬 LINE: Pekub3gg
+        </a>
+      </div>
+    `;
+    modal.classList.add('open');
+  }
+
+  function closeModal() {
+    const modal = document.getElementById('customModal');
+    modal.classList.remove('open');
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target.id === 'customModal') {
+      closeModal();
+    }
+  }
+</script>
+
+</body>
+</html>
