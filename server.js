@@ -167,7 +167,10 @@ app.post('/api/donate', async (req, res) => {
         {
           headers: {
             'Content-Type': 'application/json',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            'Accept': 'application/json',
+            'Origin': 'https://gift.truemoney.com',
+            'Referer': `https://gift.truemoney.com/campaign/?v=${voucherCode}`,
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
           },
           timeout: 12000
         }
@@ -182,7 +185,13 @@ app.post('/api/donate', async (req, res) => {
             voucher_hash: voucherCode
           },
           {
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Origin': 'https://gift.truemoney.com',
+              'Referer': `https://gift.truemoney.com/campaign/?v=${voucherCode}`,
+              'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+            },
             timeout: 12000
           }
         );
@@ -260,24 +269,34 @@ app.post('/api/donate', async (req, res) => {
       });
 
     } else {
-      return res.status(400).json({ 
-        success: false, 
-        message: resData.status?.message || 'ซองนี้ถูกใช้งานไปแล้ว หรือหมดอายุ' 
-      });
+      let errMsg = resData.status?.message || 'ซองนี้ถูกใช้งานไปแล้ว หรือหมดอายุ';
+      if (statusCode === 'CANNOT_GET_OWN_VOUCHER') {
+        errMsg = 'ไม่สามารถรับซองของตนเองได้ (ซองนี้สร้างจากเบอร์รับเงิน ต้องใช้เบอร์ TrueMoney อื่นสร้างซองเพื่อทดสอบครับ)';
+      }
+      return res.status(400).json({ success: false, message: errMsg });
     }
 
   } catch (error) {
-    const statusMsg = error.response?.data?.status?.message;
-    const statusCode = error.response?.data?.status?.code;
+    const errorData = error.response?.data;
+    const statusMsg = typeof errorData === 'object' ? errorData?.status?.message : null;
+    const statusCode = typeof errorData === 'object' ? errorData?.status?.code : null;
     
     let userFriendlyMsg = 'ไม่สามารถเติมเงินได้ กรุณาตรวจสอบลิงก์อีกครั้ง';
-    if (statusCode === 'VOUCHER_OUT_OF_STOCK') userFriendlyMsg = 'ซองของขวัญนี้ถูกผู้อื่นรับไปหมดแล้ว';
-    else if (statusCode === 'VOUCHER_EXPIRED') userFriendlyMsg = 'ซองของขวัญนี้หมดอายุแล้ว';
-    else if (statusCode === 'TARGET_USER_REDEEMED') userFriendlyMsg = 'เบอร์นี้ได้รับซองของขวัญนี้ไปแล้ว';
-    else if (statusCode === 'CANNOT_GET_OWN_VOUCHER') userFriendlyMsg = 'ไม่สามารถรับซองของขวัญของตนเองได้';
-    else if (statusMsg) userFriendlyMsg = statusMsg;
+    if (statusCode === 'CANNOT_GET_OWN_VOUCHER') {
+      userFriendlyMsg = 'ไม่สามารถรับซองของตนเองได้ (ซองนี้สร้างจากเบอร์ 0863714416 ซึ่งเป็นเบอร์รับเงิน ต้องใช้เบอร์ TrueMoney อื่นสร้างซองเพื่อทดสอบครับ)';
+    } else if (statusCode === 'VOUCHER_OUT_OF_STOCK') {
+      userFriendlyMsg = 'ซองของขวัญนี้ถูกผู้อื่นรับไปหมดแล้ว';
+    } else if (statusCode === 'VOUCHER_EXPIRED') {
+      userFriendlyMsg = 'ซองของขวัญนี้หมดอายุแล้ว (อายุซอง 72 ชั่วโมง)';
+    } else if (statusCode === 'TARGET_USER_REDEEMED') {
+      userFriendlyMsg = 'เบอร์นี้ (086-371-4416) ได้รับเงินจากซองของขวัญนี้ไปแล้ว';
+    } else if (statusCode === 'VOUCHER_NOT_FOUND') {
+      userFriendlyMsg = 'ไม่พบรหัสซองของขวัญนี้ กรุณาตรวจสอบลิงก์อีกครั้ง';
+    } else if (statusMsg) {
+      userFriendlyMsg = statusMsg;
+    }
 
-    console.error('❌ Error Redeeming TrueMoney Gift:', statusMsg || error.message);
+    console.error('❌ Error Redeeming TrueMoney Gift:', statusCode || statusMsg || error.message);
     return res.status(400).json({ success: false, message: userFriendlyMsg });
   }
 });
